@@ -33,9 +33,10 @@ User Request → Research Agent → Content Agent → Image Agent → Response
 src/main/java/za/co/digitalcowboy/agents/
 ├── agents/              # Core AI agents
 ├── config/              # Spring configuration
-├── controller/          # REST API endpoints
+├── controller/          # REST API endpoints  
 ├── domain/              # Domain models and DTOs
 ├── graph/               # Agent orchestration
+├── service/             # Async generation service
 └── tools/               # External service integrations
 
 src/test/java/
@@ -106,7 +107,7 @@ images:
 
 ### POST /api/v1/generate
 
-Generates content using the agent workflow.
+Generates content using the agent workflow (synchronous).
 
 **Request Body:**
 ```json
@@ -148,6 +149,74 @@ Generates content using the agent workflow.
 }
 ```
 
+### POST /api/v1/generate/async
+
+Starts asynchronous content generation and returns immediately with a task ID.
+
+**Request Body:**
+Same as synchronous endpoint.
+
+**Response:**
+```json
+{
+  "taskId": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "PENDING", 
+  "statusUrl": "/api/v1/generate/status/550e8400-e29b-41d4-a716-446655440000",
+  "resultUrl": "/api/v1/generate/result/550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### GET /api/v1/generate/status/{taskId}
+
+Returns the current status of an async generation task.
+
+**Response:**
+```json
+{
+  "taskId": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "IN_PROGRESS",
+  "createdAt": "2025-09-04T08:15:30Z",
+  "completedAt": null,
+  "error": null
+}
+```
+
+**Status Values:**
+- `PENDING`: Task queued but not started
+- `IN_PROGRESS`: Task currently executing 
+- `COMPLETED`: Task finished successfully
+- `FAILED`: Task failed with error
+
+### GET /api/v1/generate/result/{taskId}
+
+Returns the result of a completed async generation task.
+
+**Response:**
+Same format as synchronous endpoint when status is `COMPLETED`, or 404 if not ready.
+
+## Async Task Management
+
+### Architecture
+- **In-Memory Storage**: Tasks stored in `ConcurrentHashMap` (not Redis)
+- **Thread Pool**: Configurable async executor with 5-20 threads
+- **Auto-Cleanup**: Tasks removed after 1 hour
+- **Graceful Shutdown**: Waits up to 30 seconds for task completion
+
+### Configuration
+```yaml
+# Async thread pool configuration in AsyncConfig.java
+core-pool-size: 5
+max-pool-size: 20  
+queue-capacity: 100
+thread-name-prefix: "AsyncGeneration-"
+```
+
+### Performance Notes
+- **Fixed Issue**: Resolved Spring @Async self-invocation problem using `CompletableFuture.runAsync()`
+- **Response Time**: Async endpoint returns in ~50ms vs 20+ seconds for sync
+- **Memory**: Tasks consume memory until cleanup - monitor in production
+- **Persistence**: Tasks lost on application restart (use Redis/DB for production)
+
 ## Development Setup
 
 ### Prerequisites
@@ -176,6 +245,7 @@ mvn spring-boot:run
 
 4. **Test the API:**
 ```bash
+# Synchronous generation (20+ seconds)
 curl -X POST http://localhost:8080/api/v1/generate \
   -H "Content-Type: application/json" \
   -d '{
@@ -184,6 +254,22 @@ curl -X POST http://localhost:8080/api/v1/generate \
     "tone": "casual",
     "imageCount": 1
   }'
+
+# Async generation (returns immediately)
+curl -X POST http://localhost:8080/api/v1/generate/async \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "Machine Learning",
+    "platform": "twitter", 
+    "tone": "casual",
+    "imageCount": 1
+  }'
+
+# Check async task status
+curl http://localhost:8080/api/v1/generate/status/TASK_ID
+
+# Get async result (when completed)
+curl http://localhost:8080/api/v1/generate/result/TASK_ID
 ```
 
 ### Build Commands
@@ -258,7 +344,16 @@ CMD ["java", "-jar", "app.jar"]
 
 ## Recent Changes & Features
 
-### Local Image URLs (Latest)
+### Async Generation System (Latest)
+- Added `/api/v1/generate/async` endpoint for non-blocking generation
+- Task status tracking with `/api/v1/generate/status/{taskId}` 
+- Result retrieval with `/api/v1/generate/result/{taskId}`
+- **Critical Fix**: Resolved Spring @Async self-invocation issue using `CompletableFuture.runAsync()`
+- In-memory task storage with automatic cleanup after 1 hour
+- Configurable thread pool executor (5-20 threads, 100 queue capacity)
+- Graceful shutdown handling for running tasks
+
+### Local Image URLs
 - Added `localImageUrls` field to `ImageResult`
 - Configurable base URL via `images.base-url`
 - Static resource handler at `/generated-image/**`
@@ -294,6 +389,21 @@ Solution: Check file permissions and IMAGES_STORAGE_PATH
 ```
 Error: Twitter content exceeds 280 characters  
 Solution: System automatically truncates, warning logged
+```
+
+4. **Async Endpoint Taking 20+ Seconds (FIXED)**
+```
+Issue: /api/v1/generate/async was running synchronously instead of async
+Cause: Spring @Async self-invocation problem in AsyncGenerationService
+Fix: Replaced @Async with CompletableFuture.runAsync() to avoid proxy bypass
+Result: Async endpoint now returns in ~50ms as expected
+```
+
+5. **Task Not Found After Restart**
+```
+Error: Async task returns null after application restart
+Cause: In-memory storage (ConcurrentHashMap) loses data on restart
+Solution: Use Redis or database for production task persistence
 ```
 
 ### Debug Mode
@@ -340,7 +450,7 @@ mvn spring-boot:run
 
 ## Developer Notes
 
-**Last Updated**: 2025-09-04
+**Last Updated**: 2025-09-04 (Added Async Generation System)
 **Version**: 1.0.0
 **LangChain4j**: 0.27.1
 **Spring Boot**: 3.2.0
