@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: java-ai-agents
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      indent-output: true
+
+server:
+  port: 8080
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  text-model: ${OPENAI_TEXT_MODEL:gpt-4o}
+  image-model: ${OPENAI_IMAGE_MODEL:dall-e-3}
+  timeout-ms: ${OPENAI_TIMEOUT_MS:30000}
+  temperature: 0.1
+  max-tokens: 2000
+
+images:
+  download-enabled: ${IMAGES_DOWNLOAD_ENABLED:true}
+  local-storage-path: ${IMAGES_STORAGE_PATH:./generated-images}
+  keep-remote-url: ${IMAGES_KEEP_REMOTE_URL:false}
+  base-url: ${IMAGES_BASE_URL:http://localhost:8080}
+
+logging:
+  level:
+    za.co.digitalcowboy.agents: DEBUG
+    dev.langchain4j: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

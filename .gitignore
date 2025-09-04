@@ -1,0 +1,156 @@
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+replay_pid*
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Spring Boot
+*.pid
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Test reports
+test-output/
+surefire-reports/
+failsafe-reports/
+
+# Maven Wrapper
+!.mvn/wrapper/maven-wrapper.properties
+
+# Generated images
+generated-images/
+
+# Application-specific temp files
+*.tmp
+*.temp
+*.bak
+
+# Spring Boot DevTools
+.spring-boot-devtools.properties
+
+# JaCoCo Coverage Reports
+*.exec
+jacoco.xml
+jacoco-report/
+
+# Build artifacts
+build/
+out/
+
+# Eclipse additional files
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# IntelliJ IDEA additional
+*.iml
+.idea/
+out/
+*.iws
+
+# Java specific
+*.class
+hs_err_pid*
+
+# Application logs
+application*.log
+application*.log.*
+
+# Compiled native binaries
+*.so
+*.dll
+*.dylib
+
+# JVM crash logs
+*.hprof
+
+# H2 Database files (if using embedded H2)
+*.h2.db
+*.trace.db
+*.lock.db
+
+# Spring Boot specific
+spring.log
+/uploads/
+
+# Configuration override files (should not be in version control)
+application-local.yml
+application-local.properties

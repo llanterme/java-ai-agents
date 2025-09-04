@@ -1,0 +1,717 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Java AI Agents API",
+    "description": "Complete test collection for Java AI Agents System with OpenAI integration. This collection includes all endpoints for generating AI-powered content with research, platform-specific formatting, and image generation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Content Generation",
+      "item": [
+        {
+          "name": "Generate Twitter Professional",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Artificial Intelligence\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate Twitter content with professional tone. Response includes research points, tweet-formatted content (≤280 chars), and AI-generated image."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Twitter Casual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Coffee Culture\",\n  \"platform\": \"twitter\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate Twitter content with casual tone for lifestyle topics."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Twitter Playful",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Cat Memes\",\n  \"platform\": \"twitter\",\n  \"tone\": \"playful\",\n  \"imageCount\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate playful Twitter content with multiple images."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate LinkedIn Professional",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Remote Work Trends\",\n  \"platform\": \"linkedin\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate LinkedIn content with 3-5 paragraphs, professional insights, and business-focused CTA."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate LinkedIn Authoritative",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Digital Transformation Strategy\",\n  \"platform\": \"linkedin\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate authoritative LinkedIn content for thought leadership."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Instagram Casual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Healthy Lifestyle Tips\",\n  \"platform\": \"instagram\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate Instagram caption with line breaks, hashtags, and engaging CTA."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Instagram Playful",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Weekend Vibes\",\n  \"platform\": \"instagram\",\n  \"tone\": \"playful\",\n  \"imageCount\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate playful Instagram content with multiple images for lifestyle posts."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Blog Professional",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Machine Learning in Healthcare\",\n  \"platform\": \"blog\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate blog post with 300-500 words, H2/H3 structure, intro, body, and conclusion."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Blog Authoritative",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Cybersecurity Best Practices\",\n  \"platform\": \"blog\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate authoritative blog content with expert insights and multiple supporting images."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Blog Casual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Working from Home Tips\",\n  \"platform\": \"blog\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Generate casual blog content with conversational tone."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Edge Cases & Testing",
+      "item": [
+        {
+          "name": "Generate with No Images",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Text-Only Content Test\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Test generation without image creation."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Multiple Images",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Product Launch\",\n  \"platform\": \"instagram\",\n  \"tone\": \"playful\",\n  \"imageCount\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Test generation with multiple images (5)."
+          },
+          "response": []
+        },
+        {
+          "name": "Long Topic Name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"The Impact of Artificial Intelligence and Machine Learning on Modern Business Operations and Digital Transformation Strategies in the Post-Pandemic Era\",\n  \"platform\": \"blog\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Test with very long topic name."
+          },
+          "response": []
+        },
+        {
+          "name": "Special Characters in Topic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"AI & ML: What's Next? #TechTrends @2024!\",\n  \"platform\": \"twitter\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Test topic with special characters for filename sanitization."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Validation Tests",
+      "item": [
+        {
+          "name": "Invalid Platform",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"facebook\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Should return 400 - platform must be twitter, linkedin, instagram, or blog."
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Tone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"twitter\",\n  \"tone\": \"aggressive\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Should return 400 - tone must be professional, casual, playful, or authoritative."
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Topic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Should return 400 - topic is required."
+          },
+          "response": []
+        },
+        {
+          "name": "Empty Topic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Should return 400 - topic cannot be blank."
+          },
+          "response": []
+        },
+        {
+          "name": "Negative Image Count",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": -1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Should return 400 - image count must be positive."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health & Monitoring",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "health"]
+            },
+            "description": "Check service health status."
+          },
+          "response": []
+        },
+        {
+          "name": "Actuator Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Spring Boot Actuator health endpoint with detailed status."
+          },
+          "response": []
+        },
+        {
+          "name": "Actuator Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "info"]
+            },
+            "description": "Application information endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Actuator Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "metrics"]
+            },
+            "description": "List all available metrics."
+          },
+          "response": []
+        },
+        {
+          "name": "Research Agent Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/metrics/agent.research.duration",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "metrics", "agent.research.duration"]
+            },
+            "description": "Get research agent timing metrics."
+          },
+          "response": []
+        },
+        {
+          "name": "Content Agent Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/metrics/agent.content.duration",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "metrics", "agent.content.duration"]
+            },
+            "description": "Get content agent timing metrics."
+          },
+          "response": []
+        },
+        {
+          "name": "Image Agent Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/metrics/agent.image.duration",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "metrics", "agent.image.duration"]
+            },
+            "description": "Get image agent timing metrics."
+          },
+          "response": []
+        },
+        {
+          "name": "Orchestration Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/metrics/orchestration.duration",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "metrics", "orchestration.duration"]
+            },
+            "description": "Get total orchestration timing metrics."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Performance Tests",
+      "item": [
+        {
+          "name": "Quick Generation Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"AI\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Simple request for performance baseline testing."
+          },
+          "response": []
+        },
+        {
+          "name": "Complex Topic Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"The intersection of quantum computing, artificial intelligence, blockchain technology, and their combined impact on financial services, healthcare, and supply chain management in emerging markets\",\n  \"platform\": \"blog\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Complex topic for stress testing."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script to log request details",
+          "console.log('Request URL:', pm.request.url.toString());",
+          "console.log('Request Method:', pm.request.method);",
+          "console.log('Request Body:', pm.request.body);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Common tests for all requests",
+          "pm.test('Response time is less than 30s', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+          "});",
+          "",
+          "// Test for successful responses",
+          "if (pm.response.code === 200) {",
+          "    pm.test('Status code is 200', function () {",
+          "        pm.response.to.have.status(200);",
+          "    });",
+          "    ",
+          "    pm.test('Response has valid JSON', function () {",
+          "        pm.response.to.be.json;",
+          "    });",
+          "    ",
+          "    // For generate endpoints",
+          "    if (pm.request.url.path.includes('generate')) {",
+          "        const jsonData = pm.response.json();",
+          "        ",
+          "        pm.test('Response has required fields', function () {",
+          "            pm.expect(jsonData).to.have.property('topic');",
+          "            pm.expect(jsonData).to.have.property('research');",
+          "            pm.expect(jsonData).to.have.property('content');",
+          "            pm.expect(jsonData).to.have.property('image');",
+          "        });",
+          "        ",
+          "        pm.test('Research has 5-7 points', function () {",
+          "            const points = jsonData.research.points;",
+          "            pm.expect(points.length).to.be.at.least(5);",
+          "            pm.expect(points.length).to.be.at.most(7);",
+          "        });",
+          "        ",
+          "        pm.test('Content matches requested platform', function () {",
+          "            const requestBody = JSON.parse(pm.request.body.raw);",
+          "            pm.expect(jsonData.content.platform).to.eql(requestBody.platform);",
+          "        });",
+          "        ",
+          "        pm.test('Content matches requested tone', function () {",
+          "            const requestBody = JSON.parse(pm.request.body.raw);",
+          "            pm.expect(jsonData.content.tone).to.eql(requestBody.tone);",
+          "        });",
+          "    }",
+          "}",
+          "",
+          "// Test for validation errors",
+          "if (pm.response.code === 400) {",
+          "    pm.test('Validation error response structure', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('message');",
+          "        pm.expect(jsonData).to.have.property('status');",
+          "        pm.expect(jsonData.status).to.eql(400);",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "openaiApiKey",
+      "value": "your-openai-api-key-here",
+      "type": "string"
+    }
+  ]
+}
