@@ -94,7 +94,8 @@ public class AgentFlowTests {
             .thenReturn(new ImageResult(
                 "Modern AI technology visualization",
                 List.of("https://example.com/image1.png"),
-                List.of("/path/to/local/image1.png")
+                List.of("/path/to/local/image1.png"),
+                List.of("http://localhost:8080/generated-image/image1.png")
             ));
         
         // Execute workflow

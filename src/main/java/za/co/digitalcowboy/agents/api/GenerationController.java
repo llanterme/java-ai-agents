@@ -1,8 +1,7 @@
 package za.co.digitalcowboy.agents.api;
 
-import za.co.digitalcowboy.agents.domain.OrchestrationResult;
-import za.co.digitalcowboy.agents.domain.TopicRequest;
-import za.co.digitalcowboy.agents.graph.AgentGraph;
+import za.co.digitalcowboy.agents.domain.*;
+import za.co.digitalcowboy.agents.service.AsyncGenerationService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,42 +9,63 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/generate")
 @CrossOrigin(origins = "*")
 public class GenerationController {
     
     private static final Logger log = LoggerFactory.getLogger(GenerationController.class);
     
-    private final AgentGraph agentGraph;
+    private final AsyncGenerationService asyncGenerationService;
     
-    public GenerationController(AgentGraph agentGraph) {
-        this.agentGraph = agentGraph;
+    public GenerationController(AsyncGenerationService asyncGenerationService) {
+        this.asyncGenerationService = asyncGenerationService;
     }
     
-    @PostMapping("/generate")
-    public ResponseEntity<OrchestrationResult> generate(@Valid @RequestBody TopicRequest request) {
-        log.info("Received generation request: topic={}, platform={}, tone={}, imageCount={}", 
-            request.topic(), request.platform(), request.tone(), request.imageCount());
+    @PostMapping("/async")
+    public ResponseEntity<AsyncGenerationResponse> startAsyncGeneration(@Valid @RequestBody TopicRequest request) {
+        log.info("Starting async generation for topic: {} on platform: {}", request.topic(), request.platform());
         
-        try {
-            OrchestrationResult result = agentGraph.run(request);
-            
-            log.info("Generation completed successfully for topic: {}", request.topic());
-            return ResponseEntity.ok(result);
-            
-        } catch (Exception e) {
-            log.error("Generation failed for request: {}", request, e);
-            
-            // Return partial result with error details
-            OrchestrationResult errorResult = OrchestrationResult.empty(request.topic());
-            return ResponseEntity.status(500).body(errorResult);
+        String taskId = asyncGenerationService.startGeneration(request);
+        AsyncGenerationResponse response = AsyncGenerationResponse.forTask(taskId);
+        
+        log.info("Started async generation task: {} for topic: {}", taskId, request.topic());
+        return ResponseEntity.accepted().body(response);
+    }
+    
+    @GetMapping("/status/{taskId}")
+    public ResponseEntity<GenerationTask> getTaskStatus(@PathVariable String taskId) {
+        GenerationTask task = asyncGenerationService.getTask(taskId);
+        
+        if (task == null) {
+            log.warn("Task not found: {}", taskId);
+            return ResponseEntity.notFound().build();
         }
+        
+        log.debug("Retrieved status for task: {} - Status: {}", taskId, task.status());
+        return ResponseEntity.ok(task);
     }
     
-    @GetMapping("/health")
-    public ResponseEntity<HealthResponse> health() {
-        return ResponseEntity.ok(new HealthResponse("healthy", System.currentTimeMillis()));
+    @GetMapping("/result/{taskId}")
+    public ResponseEntity<OrchestrationResult> getTaskResult(@PathVariable String taskId) {
+        GenerationTask task = asyncGenerationService.getTask(taskId);
+        
+        if (task == null) {
+            log.warn("Task not found: {}", taskId);
+            return ResponseEntity.notFound().build();
+        }
+        
+        if (task.status() != TaskStatus.COMPLETED) {
+            log.warn("Task {} not completed yet. Status: {}", taskId, task.status());
+            return ResponseEntity.badRequest().build();
+        }
+        
+        OrchestrationResult result = task.result();
+        if (result == null) {
+            log.error("Task {} marked as completed but has no result", taskId);
+            return ResponseEntity.internalServerError().build();
+        }
+        
+        log.info("Retrieved result for completed task: {}", taskId);
+        return ResponseEntity.ok(result);
     }
-    
-    public record HealthResponse(String status, long timestamp) {}
 }

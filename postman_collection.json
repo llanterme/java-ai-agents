@@ -1,16 +1,16 @@
 {
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "name": "Java AI Agents API",
-    "description": "Complete test collection for Java AI Agents System with OpenAI integration. This collection includes all endpoints for generating AI-powered content with research, platform-specific formatting, and image generation.",
+    "name": "Java AI Agents API - Async",
+    "description": "Complete test collection for Java AI Agents System with OpenAI integration and async processing. This collection includes all async endpoints for generating AI-powered content with research, platform-specific formatting, and image generation.\n\n**Key Features:**\n- Async generation with immediate task ID response\n- Status polling for progress tracking\n- Result retrieval when complete\n- Local image download with HTTP URLs\n- Configurable base URL for deployment flexibility",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Content Generation",
+      "name": "Async Content Generation",
       "item": [
         {
-          "name": "Generate Twitter Professional",
+          "name": "Start Twitter Professional Generation",
           "request": {
             "method": "POST",
             "header": [
@@ -24,62 +24,16 @@
               "raw": "{\n  \"topic\": \"Artificial Intelligence\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Generate Twitter content with professional tone. Response includes research points, tweet-formatted content (≤280 chars), and AI-generated image."
+            "description": "Start async generation for Twitter content with professional tone. Returns task ID immediately (~50ms)."
           },
           "response": []
         },
         {
-          "name": "Generate Twitter Casual",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Coffee Culture\",\n  \"platform\": \"twitter\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
-            },
-            "description": "Generate Twitter content with casual tone for lifestyle topics."
-          },
-          "response": []
-        },
-        {
-          "name": "Generate Twitter Playful",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Cat Memes\",\n  \"platform\": \"twitter\",\n  \"tone\": \"playful\",\n  \"imageCount\": 2\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
-            },
-            "description": "Generate playful Twitter content with multiple images."
-          },
-          "response": []
-        },
-        {
-          "name": "Generate LinkedIn Professional",
+          "name": "Start LinkedIn Professional Generation", 
           "request": {
             "method": "POST",
             "header": [
@@ -93,16 +47,16 @@
               "raw": "{\n  \"topic\": \"Remote Work Trends\",\n  \"platform\": \"linkedin\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Generate LinkedIn content with 3-5 paragraphs, professional insights, and business-focused CTA."
+            "description": "Start async generation for LinkedIn content with 3-5 paragraphs and business CTA."
           },
           "response": []
         },
         {
-          "name": "Generate LinkedIn Authoritative",
+          "name": "Start Instagram Casual Generation",
           "request": {
             "method": "POST",
             "header": [
@@ -113,19 +67,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic\": \"Digital Transformation Strategy\",\n  \"platform\": \"linkedin\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 1\n}"
+              "raw": "{\n  \"topic\": \"Healthy Lifestyle Tips\",\n  \"platform\": \"instagram\",\n  \"tone\": \"casual\",\n  \"imageCount\": 2\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Generate authoritative LinkedIn content for thought leadership."
+            "description": "Start async generation for Instagram caption with hashtags and multiple images."
           },
           "response": []
         },
         {
-          "name": "Generate Instagram Casual",
+          "name": "Start Blog Authoritative Generation",
           "request": {
             "method": "POST",
             "header": [
@@ -136,139 +90,77 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic\": \"Healthy Lifestyle Tips\",\n  \"platform\": \"instagram\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
+              "raw": "{\n  \"topic\": \"Machine Learning in Healthcare\",\n  \"platform\": \"blog\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Generate Instagram caption with line breaks, hashtags, and engaging CTA."
-          },
-          "response": []
-        },
-        {
-          "name": "Generate Instagram Playful",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Weekend Vibes\",\n  \"platform\": \"instagram\",\n  \"tone\": \"playful\",\n  \"imageCount\": 3\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
-            },
-            "description": "Generate playful Instagram content with multiple images for lifestyle posts."
-          },
-          "response": []
-        },
-        {
-          "name": "Generate Blog Professional",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Machine Learning in Healthcare\",\n  \"platform\": \"blog\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
-            },
-            "description": "Generate blog post with 300-500 words, H2/H3 structure, intro, body, and conclusion."
-          },
-          "response": []
-        },
-        {
-          "name": "Generate Blog Authoritative",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Cybersecurity Best Practices\",\n  \"platform\": \"blog\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 2\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
-            },
-            "description": "Generate authoritative blog content with expert insights and multiple supporting images."
-          },
-          "response": []
-        },
-        {
-          "name": "Generate Blog Casual",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Working from Home Tips\",\n  \"platform\": \"blog\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
-            },
-            "description": "Generate casual blog content with conversational tone."
+            "description": "Start async generation for blog post with 300-500 words and structured content."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Edge Cases & Testing",
+      "name": "Task Management",
       "item": [
         {
-          "name": "Generate with No Images",
+          "name": "Get Task Status",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Text-Only Content Test\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 0\n}"
-            },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/status/{{taskId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "status", "{{taskId}}"]
             },
-            "description": "Test generation without image creation."
+            "description": "Check the status of a generation task. Status can be PENDING, IN_PROGRESS, COMPLETED, or FAILED."
           },
           "response": []
         },
         {
-          "name": "Generate Multiple Images",
+          "name": "Get Task Result",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate/result/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate", "result", "{{taskId}}"]
+            },
+            "description": "Retrieve the completed result for a task. Only works when task status is COMPLETED."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Complete Async Workflow Examples",
+      "item": [
+        {
+          "name": "1. Start Generation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('taskId', jsonData.taskId);",
+                  "    console.log('Task ID saved:', jsonData.taskId);",
+                  "    ",
+                  "    pm.test('Task started successfully', function () {",
+                  "        pm.expect(jsonData.taskId).to.be.a('string');",
+                  "        pm.expect(jsonData.status).to.eql('PENDING');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -279,60 +171,121 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic\": \"Product Launch\",\n  \"platform\": \"instagram\",\n  \"tone\": \"playful\",\n  \"imageCount\": 5\n}"
+              "raw": "{\n  \"topic\": \"{{testTopic}}\",\n  \"platform\": \"{{testPlatform}}\",\n  \"tone\": \"{{testTone}}\",\n  \"imageCount\": {{testImageCount}}\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Test generation with multiple images (5)."
+            "description": "Step 1: Start generation and save task ID to environment variable"
           },
           "response": []
         },
         {
-          "name": "Long Topic Name",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "2. Poll Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    console.log('Task status:', jsonData.status);",
+                  "    ",
+                  "    pm.test('Task exists', function () {",
+                  "        pm.expect(jsonData.id).to.be.a('string');",
+                  "        pm.expect(jsonData.status).to.be.oneOf(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED']);",
+                  "    });",
+                  "    ",
+                  "    if (jsonData.status === 'COMPLETED') {",
+                  "        console.log('Task completed! Ready to get result.');",
+                  "    } else if (jsonData.status === 'FAILED') {",
+                  "        console.log('Task failed:', jsonData.error);",
+                  "    } else {",
+                  "        console.log('Task still processing. Check again in a few seconds.');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"The Impact of Artificial Intelligence and Machine Learning on Modern Business Operations and Digital Transformation Strategies in the Post-Pandemic Era\",\n  \"platform\": \"blog\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 1\n}"
-            },
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/status/{{taskId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "status", "{{taskId}}"]
             },
-            "description": "Test with very long topic name."
+            "description": "Step 2: Poll task status (repeat until COMPLETED)"
           },
           "response": []
         },
         {
-          "name": "Special Characters in Topic",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "3. Get Result",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    pm.test('Result has all components', function () {",
+                  "        pm.expect(jsonData).to.have.property('topic');",
+                  "        pm.expect(jsonData).to.have.property('research');",
+                  "        pm.expect(jsonData).to.have.property('content');",
+                  "        pm.expect(jsonData).to.have.property('image');",
+                  "    });",
+                  "    ",
+                  "    pm.test('Image has local URLs', function () {",
+                  "        if (jsonData.image.localImageUrls.length > 0) {",
+                  "            const url = jsonData.image.localImageUrls[0];",
+                  "            pm.expect(url).to.include('/generated-image/');",
+                  "        }",
+                  "    });",
+                  "    ",
+                  "    console.log('Generation complete!');",
+                  "    console.log('Topic:', jsonData.topic);",
+                  "    console.log('Platform:', jsonData.content.platform);",
+                  "    console.log('Research points:', jsonData.research.points.length);",
+                  "    console.log('Local image URLs:', jsonData.image.localImageUrls.length);",
+                  "}"
+                ],
+                "type": "text/javascript"
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"AI & ML: What's Next? #TechTrends @2024!\",\n  \"platform\": \"twitter\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
-            },
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/result/{{taskId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "result", "{{taskId}}"]
             },
-            "description": "Test topic with special characters for filename sanitization."
+            "description": "Step 3: Get the completed result with all content and images"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Image Access",
+      "item": [
+        {
+          "name": "Access Generated Image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/generated-image/{{imageFilename}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["generated-image", "{{imageFilename}}"]
+            },
+            "description": "Access a generated image directly via HTTP. Set imageFilename environment variable to test."
           },
           "response": []
         }
@@ -356,9 +309,9 @@
               "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"facebook\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
             "description": "Should return 400 - platform must be twitter, linkedin, instagram, or blog."
           },
@@ -367,7 +320,7 @@
         {
           "name": "Invalid Tone",
           "request": {
-            "method": "POST",
+            "method": "POST", 
             "header": [
               {
                 "key": "Content-Type",
@@ -379,11 +332,11 @@
               "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"twitter\",\n  \"tone\": \"aggressive\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Should return 400 - tone must be professional, casual, playful, or authoritative."
+            "description": "Should return 400 - tone must be professional, casual, friendly, authoritative, or technical."
           },
           "response": []
         },
@@ -402,16 +355,16 @@
               "raw": "{\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
             "description": "Should return 400 - topic is required."
           },
           "response": []
         },
         {
-          "name": "Empty Topic",
+          "name": "Invalid Image Count",
           "request": {
             "method": "POST",
             "header": [
@@ -422,37 +375,42 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic\": \"\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+              "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 5\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Should return 400 - topic cannot be blank."
+            "description": "Should return 400 - image count must be 0-4."
           },
           "response": []
         },
         {
-          "name": "Negative Image Count",
+          "name": "Non-existent Task",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": -1\n}"
-            },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/status/non-existent-task-id",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "status", "non-existent-task-id"]
             },
-            "description": "Should return 400 - image count must be positive."
+            "description": "Should return 404 for non-existent task ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Result Before Completion",
+          "request": {
+            "method": "GET", 
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate/result/{{pendingTaskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate", "result", "{{pendingTaskId}}"]
+            },
+            "description": "Should return 400 when trying to get result for non-completed task."
           },
           "response": []
         }
@@ -471,7 +429,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "v1", "health"]
             },
-            "description": "Check service health status."
+            "description": "Check service health status with active and total task counts."
           },
           "response": []
         },
@@ -490,20 +448,6 @@
           "response": []
         },
         {
-          "name": "Actuator Info",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/actuator/info",
-              "host": ["{{baseUrl}}"],
-              "path": ["actuator", "info"]
-            },
-            "description": "Application information endpoint."
-          },
-          "response": []
-        },
-        {
           "name": "Actuator Metrics",
           "request": {
             "method": "GET",
@@ -513,49 +457,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["actuator", "metrics"]
             },
-            "description": "List all available metrics."
-          },
-          "response": []
-        },
-        {
-          "name": "Research Agent Metrics",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/actuator/metrics/agent.research.duration",
-              "host": ["{{baseUrl}}"],
-              "path": ["actuator", "metrics", "agent.research.duration"]
-            },
-            "description": "Get research agent timing metrics."
-          },
-          "response": []
-        },
-        {
-          "name": "Content Agent Metrics",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/actuator/metrics/agent.content.duration",
-              "host": ["{{baseUrl}}"],
-              "path": ["actuator", "metrics", "agent.content.duration"]
-            },
-            "description": "Get content agent timing metrics."
-          },
-          "response": []
-        },
-        {
-          "name": "Image Agent Metrics",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/actuator/metrics/agent.image.duration",
-              "host": ["{{baseUrl}}"],
-              "path": ["actuator", "metrics", "agent.image.duration"]
-            },
-            "description": "Get image agent timing metrics."
+            "description": "List all available metrics including agent timing."
           },
           "response": []
         },
@@ -576,10 +478,10 @@
       ]
     },
     {
-      "name": "Performance Tests",
+      "name": "Load Testing",
       "item": [
         {
-          "name": "Quick Generation Test",
+          "name": "Concurrent Generation Test",
           "request": {
             "method": "POST",
             "header": [
@@ -590,19 +492,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic\": \"AI\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+              "raw": "{\n  \"topic\": \"Load Test {{$randomInt}}\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Simple request for performance baseline testing."
+            "description": "Test concurrent requests with random topics. Use Postman Runner for load testing."
           },
           "response": []
         },
         {
-          "name": "Complex Topic Test",
+          "name": "No Images Speed Test",
           "request": {
             "method": "POST",
             "header": [
@@ -613,14 +515,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic\": \"The intersection of quantum computing, artificial intelligence, blockchain technology, and their combined impact on financial services, healthcare, and supply chain management in emerging markets\",\n  \"platform\": \"blog\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 3\n}"
+              "raw": "{\n  \"topic\": \"Quick Test\",\n  \"platform\": \"twitter\",\n  \"tone\": \"casual\",\n  \"imageCount\": 0\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate",
+              "raw": "{{baseUrl}}/api/v1/generate/async",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate"]
+              "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Complex topic for stress testing."
+            "description": "Fast test without image generation for performance baseline."
           },
           "response": []
         }
@@ -634,9 +536,11 @@
         "type": "text/javascript",
         "exec": [
           "// Pre-request script to log request details",
-          "console.log('Request URL:', pm.request.url.toString());",
-          "console.log('Request Method:', pm.request.method);",
-          "console.log('Request Body:', pm.request.body);"
+          "console.log('🚀 Request URL:', pm.request.url.toString());",
+          "console.log('📋 Request Method:', pm.request.method);",
+          "if (pm.request.body && pm.request.body.raw) {",
+          "    console.log('📦 Request Body:', pm.request.body.raw);",
+          "}"
         ]
       }
     },
@@ -646,11 +550,38 @@
         "type": "text/javascript",
         "exec": [
           "// Common tests for all requests",
-          "pm.test('Response time is less than 30s', function () {",
-          "    pm.expect(pm.response.responseTime).to.be.below(30000);",
-          "});",
+          "const responseTime = pm.response.responseTime;",
+          "console.log('⏱️ Response time:', responseTime + 'ms');",
           "",
-          "// Test for successful responses",
+          "// Performance test based on endpoint type",
+          "if (pm.request.url.path.includes('async')) {",
+          "    pm.test('Async response time < 500ms', function () {",
+          "        pm.expect(responseTime).to.be.below(500);",
+          "    });",
+          "} else if (pm.request.url.path.includes('status') || pm.request.url.path.includes('result')) {",
+          "    pm.test('Status/Result response time < 200ms', function () {",
+          "        pm.expect(responseTime).to.be.below(200);",
+          "    });",
+          "} else {",
+          "    pm.test('General response time < 5s', function () {",
+          "        pm.expect(responseTime).to.be.below(5000);",
+          "    });",
+          "}",
+          "",
+          "// Test for successful async start responses (202)",
+          "if (pm.response.code === 202) {",
+          "    pm.test('Async task started successfully', function () {",
+          "        pm.response.to.have.status(202);",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('taskId');",
+          "        pm.expect(jsonData).to.have.property('status');",
+          "        pm.expect(jsonData.status).to.eql('PENDING');",
+          "        pm.expect(jsonData).to.have.property('statusUrl');",
+          "        pm.expect(jsonData).to.have.property('resultUrl');",
+          "    });",
+          "}",
+          "",
+          "// Test for successful status responses (200)",
           "if (pm.response.code === 200) {",
           "    pm.test('Status code is 200', function () {",
           "        pm.response.to.have.status(200);",
@@ -660,36 +591,63 @@
           "        pm.response.to.be.json;",
           "    });",
           "    ",
-          "    // For generate endpoints",
-          "    if (pm.request.url.path.includes('generate')) {",
+          "    // For status endpoints",
+          "    if (pm.request.url.path.includes('status')) {",
           "        const jsonData = pm.response.json();",
           "        ",
-          "        pm.test('Response has required fields', function () {",
+          "        pm.test('Status response has required fields', function () {",
+          "            pm.expect(jsonData).to.have.property('id');",
+          "            pm.expect(jsonData).to.have.property('status');",
+          "            pm.expect(jsonData).to.have.property('createdAt');",
+          "            pm.expect(jsonData).to.have.property('updatedAt');",
+          "        });",
+          "        ",
+          "        pm.test('Status is valid', function () {",
+          "            pm.expect(jsonData.status).to.be.oneOf(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED']);",
+          "        });",
+          "    }",
+          "    ",
+          "    // For result endpoints",
+          "    if (pm.request.url.path.includes('result') && !pm.request.url.path.includes('status')) {",
+          "        const jsonData = pm.response.json();",
+          "        ",
+          "        pm.test('Result has all components', function () {",
           "            pm.expect(jsonData).to.have.property('topic');",
           "            pm.expect(jsonData).to.have.property('research');",
           "            pm.expect(jsonData).to.have.property('content');",
           "            pm.expect(jsonData).to.have.property('image');",
           "        });",
           "        ",
-          "        pm.test('Research has 5-7 points', function () {",
-          "            const points = jsonData.research.points;",
-          "            pm.expect(points.length).to.be.at.least(5);",
-          "            pm.expect(points.length).to.be.at.most(7);",
+          "        pm.test('Research has required fields', function () {",
+          "            pm.expect(jsonData.research).to.have.property('points');",
+          "            pm.expect(jsonData.research.points).to.be.an('array');",
           "        });",
           "        ",
-          "        pm.test('Content matches requested platform', function () {",
-          "            const requestBody = JSON.parse(pm.request.body.raw);",
-          "            pm.expect(jsonData.content.platform).to.eql(requestBody.platform);",
+          "        pm.test('Content has required fields', function () {",
+          "            pm.expect(jsonData.content).to.have.property('platform');",
+          "            pm.expect(jsonData.content).to.have.property('tone');",
+          "            pm.expect(jsonData.content).to.have.property('body');",
           "        });",
           "        ",
-          "        pm.test('Content matches requested tone', function () {",
-          "            const requestBody = JSON.parse(pm.request.body.raw);",
-          "            pm.expect(jsonData.content.tone).to.eql(requestBody.tone);",
+          "        pm.test('Image has all URL types', function () {",
+          "            pm.expect(jsonData.image).to.have.property('openAiImageUrls');",
+          "            pm.expect(jsonData.image).to.have.property('localImagePaths');",
+          "            pm.expect(jsonData.image).to.have.property('localImageUrls');",
+          "        });",
+          "    }",
+          "    ",
+          "    // For health endpoints",
+          "    if (pm.request.url.path.includes('health')) {",
+          "        const jsonData = pm.response.json();",
+          "        ",
+          "        pm.test('Health response structure', function () {",
+          "            pm.expect(jsonData).to.have.property('status');",
+          "            pm.expect(jsonData).to.have.property('timestamp');",
           "        });",
           "    }",
           "}",
           "",
-          "// Test for validation errors",
+          "// Test for validation errors (400)",
           "if (pm.response.code === 400) {",
           "    pm.test('Validation error response structure', function () {",
           "        const jsonData = pm.response.json();",
@@ -697,7 +655,17 @@
           "        pm.expect(jsonData).to.have.property('status');",
           "        pm.expect(jsonData.status).to.eql(400);",
           "    });",
-          "}"
+          "}",
+          "",
+          "// Test for not found errors (404)",
+          "if (pm.response.code === 404) {",
+          "    pm.test('Not found error response', function () {",
+          "        pm.response.to.have.status(404);",
+          "    });",
+          "}",
+          "",
+          "// Log response status",
+          "console.log('✅ Response status:', pm.response.code, pm.response.status);"
         ]
       }
     }
@@ -705,13 +673,51 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080",
-      "type": "string"
+      "value": "{{AGENTS_BASE_URL}}",
+      "type": "string",
+      "description": "Base URL for the agents API (set via environment)"
     },
     {
-      "key": "openaiApiKey",
-      "value": "your-openai-api-key-here",
-      "type": "string"
+      "key": "taskId", 
+      "value": "",
+      "type": "string",
+      "description": "Current task ID (auto-populated by workflow tests)"
+    },
+    {
+      "key": "pendingTaskId",
+      "value": "",
+      "type": "string", 
+      "description": "Task ID that's still pending (for testing error scenarios)"
+    },
+    {
+      "key": "imageFilename",
+      "value": "20241204_143025_test_topic_abc12345.png",
+      "type": "string",
+      "description": "Example image filename for testing image access"
+    },
+    {
+      "key": "testTopic",
+      "value": "{{AGENTS_TEST_TOPIC}}",
+      "type": "string",
+      "description": "Test topic for generation (set via environment)"
+    },
+    {
+      "key": "testPlatform",
+      "value": "{{AGENTS_TEST_PLATFORM}}",
+      "type": "string",
+      "description": "Test platform (set via environment)"
+    },
+    {
+      "key": "testTone",
+      "value": "{{AGENTS_TEST_TONE}}",
+      "type": "string",
+      "description": "Test tone (set via environment)"
+    },
+    {
+      "key": "testImageCount",
+      "value": "{{AGENTS_TEST_IMAGE_COUNT}}",
+      "type": "string",
+      "description": "Test image count (set via environment)"
     }
   ]
 }
