@@ -1,16 +1,303 @@
 {
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "name": "Java AI Agents API - Async",
-    "description": "Complete test collection for Java AI Agents System with OpenAI integration and async processing. This collection includes all async endpoints for generating AI-powered content with research, platform-specific formatting, and image generation.\n\n**Key Features:**\n- Async generation with immediate task ID response\n- Status polling for progress tracking\n- Result retrieval when complete\n- Local image download with HTTP URLs\n- Configurable base URL for deployment flexibility",
+    "name": "Java AI Agents API - Complete with Auth",
+    "description": "Complete test collection for Java AI Agents System with JWT Authentication, OpenAI integration, and async processing.\n\n**Authentication Flow:**\n1. Register a new user or login with existing credentials\n2. Access token is automatically saved and used for all protected endpoints\n3. Refresh token when needed\n\n**Key Features:**\n- JWT-based authentication with automatic token management\n- User registration and login\n- Token refresh mechanism\n- Protected content generation endpoints\n- Async generation with task tracking\n- Real-time web search integration\n- Local image download with HTTP URLs",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
   },
   "item": [
     {
-      "name": "Async Content Generation",
+      "name": "Authentication",
       "item": [
         {
-          "name": "Start Twitter Professional Generation",
+          "name": "Register New User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    // Save tokens to environment",
+                  "    pm.environment.set('accessToken', jsonData.accessToken);",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "    pm.environment.set('tokenExpiresIn', jsonData.expiresIn);",
+                  "    ",
+                  "    console.log('✅ User registered successfully!');",
+                  "    console.log('🔑 Access token saved to environment');",
+                  "    console.log('🔄 Refresh token saved to environment');",
+                  "    console.log('⏱️ Token expires in:', jsonData.expiresIn, 'seconds');",
+                  "    ",
+                  "    pm.test('Registration successful', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('accessToken');",
+                  "        pm.expect(jsonData).to.have.property('refreshToken');",
+                  "        pm.expect(jsonData).to.have.property('expiresIn');",
+                  "    });",
+                  "} else if (pm.response.code === 400) {",
+                  "    const jsonData = pm.response.json();",
+                  "    console.log('❌ Registration failed:', jsonData.message);",
+                  "    ",
+                  "    pm.test('Registration validation', function () {",
+                  "        pm.response.to.have.status(400);",
+                  "        pm.expect(jsonData).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate random email for testing",
+                  "const randomEmail = `test_${Date.now()}@example.com`;",
+                  "pm.environment.set('testEmail', randomEmail);",
+                  "pm.environment.set('testPassword', 'SecurePass123!');",
+                  "",
+                  "console.log('📧 Registering with email:', randomEmail);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"name\": \"Test\",\n  \"surname\": \"User\",\n  \"password\": \"{{testPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Register a new user account. Automatically saves the access and refresh tokens to environment variables for use in subsequent requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    // Save tokens to environment",
+                  "    pm.environment.set('accessToken', jsonData.accessToken);",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "    pm.environment.set('tokenExpiresIn', jsonData.expiresIn);",
+                  "    ",
+                  "    console.log('✅ Login successful!');",
+                  "    console.log('🔑 Access token saved to environment');",
+                  "    console.log('🔄 Refresh token saved to environment');",
+                  "    console.log('⏱️ Token expires in:', jsonData.expiresIn, 'seconds');",
+                  "    ",
+                  "    pm.test('Login successful', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('accessToken');",
+                  "        pm.expect(jsonData).to.have.property('refreshToken');",
+                  "        pm.expect(jsonData).to.have.property('expiresIn');",
+                  "    });",
+                  "} else if (pm.response.code === 401) {",
+                  "    const jsonData = pm.response.json();",
+                  "    console.log('❌ Login failed:', jsonData.message);",
+                  "    ",
+                  "    pm.test('Invalid credentials', function () {",
+                  "        pm.response.to.have.status(401);",
+                  "        pm.expect(jsonData).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{loginEmail}}\",\n  \"password\": \"{{loginPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Login with existing credentials. Automatically saves the access and refresh tokens to environment variables."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    // Update tokens in environment",
+                  "    pm.environment.set('accessToken', jsonData.accessToken);",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "    pm.environment.set('tokenExpiresIn', jsonData.expiresIn);",
+                  "    ",
+                  "    console.log('✅ Token refreshed successfully!');",
+                  "    console.log('🔑 New access token saved');",
+                  "    console.log('🔄 New refresh token saved');",
+                  "    ",
+                  "    pm.test('Token refresh successful', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('accessToken');",
+                  "        pm.expect(jsonData).to.have.property('refreshToken');",
+                  "    });",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Token refresh failed - please login again');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{refreshToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "description": "Refresh the access token using the refresh token. Automatically updates both tokens in environment."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    console.log('👤 Current user:');",
+                  "    console.log('  ID:', jsonData.id);",
+                  "    console.log('  Email:', jsonData.email);",
+                  "    console.log('  Name:', jsonData.name, jsonData.surname);",
+                  "    console.log('  Roles:', jsonData.roles);",
+                  "    console.log('  Active:', jsonData.active);",
+                  "    ",
+                  "    pm.test('User profile retrieved', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('id');",
+                  "        pm.expect(jsonData).to.have.property('email');",
+                  "        pm.expect(jsonData).to.have.property('roles');",
+                  "        pm.expect(jsonData.roles).to.be.an('array');",
+                  "    });",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Unauthorized - please login first');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            },
+            "description": "Get the current authenticated user's profile. Requires valid access token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Content Generation (Protected)",
+      "item": [
+        {
+          "name": "Generate Twitter Content",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    console.log('✅ Content generated successfully!');",
+                  "    console.log('📝 Platform:', jsonData.content.platform);",
+                  "    console.log('🎯 Research points:', jsonData.research.points.length);",
+                  "    console.log('🖼️ Images generated:', jsonData.image.localImageUrls.length);",
+                  "    ",
+                  "    pm.test('Content generation successful', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('research');",
+                  "        pm.expect(jsonData).to.have.property('content');",
+                  "        pm.expect(jsonData).to.have.property('image');",
+                  "    });",
+                  "    ",
+                  "    pm.test('Twitter content constraints', function () {",
+                  "        pm.expect(jsonData.content.body.length).to.be.below(281);",
+                  "    });",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Unauthorized - access token may be expired');",
+                  "    console.log('💡 Try refreshing your token or login again');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -24,16 +311,16 @@
               "raw": "{\n  \"topic\": \"Artificial Intelligence\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
+              "raw": "{{baseUrl}}/api/v1/generate",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
+              "path": ["api", "v1", "generate"]
             },
-            "description": "Start async generation for Twitter content with professional tone. Returns task ID immediately (~50ms)."
+            "description": "Generate Twitter content (synchronous). Requires authentication. Takes 20+ seconds to complete."
           },
           "response": []
         },
         {
-          "name": "Start LinkedIn Professional Generation", 
+          "name": "Generate LinkedIn Content",
           "request": {
             "method": "POST",
             "header": [
@@ -47,16 +334,16 @@
               "raw": "{\n  \"topic\": \"Remote Work Trends\",\n  \"platform\": \"linkedin\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
+              "raw": "{{baseUrl}}/api/v1/generate",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
+              "path": ["api", "v1", "generate"]
             },
-            "description": "Start async generation for LinkedIn content with 3-5 paragraphs and business CTA."
+            "description": "Generate LinkedIn content with 3-5 paragraphs. Requires authentication."
           },
           "response": []
         },
         {
-          "name": "Start Instagram Casual Generation",
+          "name": "Generate Instagram Content",
           "request": {
             "method": "POST",
             "header": [
@@ -70,16 +357,16 @@
               "raw": "{\n  \"topic\": \"Healthy Lifestyle Tips\",\n  \"platform\": \"instagram\",\n  \"tone\": \"casual\",\n  \"imageCount\": 2\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
+              "raw": "{{baseUrl}}/api/v1/generate",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
+              "path": ["api", "v1", "generate"]
             },
-            "description": "Start async generation for Instagram caption with hashtags and multiple images."
+            "description": "Generate Instagram caption with hashtags. Requires authentication."
           },
           "response": []
         },
         {
-          "name": "Start Blog Authoritative Generation",
+          "name": "Generate Blog Content",
           "request": {
             "method": "POST",
             "header": [
@@ -93,54 +380,21 @@
               "raw": "{\n  \"topic\": \"Machine Learning in Healthcare\",\n  \"platform\": \"blog\",\n  \"tone\": \"authoritative\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
+              "raw": "{{baseUrl}}/api/v1/generate",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
+              "path": ["api", "v1", "generate"]
             },
-            "description": "Start async generation for blog post with 300-500 words and structured content."
+            "description": "Generate blog post with 300-500 words. Requires authentication."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Task Management",
+      "name": "Async Generation (Protected)",
       "item": [
         {
-          "name": "Get Task Status",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/status/{{taskId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "status", "{{taskId}}"]
-            },
-            "description": "Check the status of a generation task. Status can be PENDING, IN_PROGRESS, COMPLETED, or FAILED."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Task Result",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/result/{{taskId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "result", "{{taskId}}"]
-            },
-            "description": "Retrieve the completed result for a task. Only works when task status is COMPLETED."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Complete Async Workflow Examples",
-      "item": [
-        {
-          "name": "1. Start Generation",
+          "name": "Start Async Generation",
           "event": [
             {
               "listen": "test",
@@ -148,13 +402,21 @@
                 "exec": [
                   "if (pm.response.code === 202) {",
                   "    const jsonData = pm.response.json();",
-                  "    pm.environment.set('taskId', jsonData.taskId);",
-                  "    console.log('Task ID saved:', jsonData.taskId);",
                   "    ",
-                  "    pm.test('Task started successfully', function () {",
-                  "        pm.expect(jsonData.taskId).to.be.a('string');",
+                  "    pm.environment.set('taskId', jsonData.taskId);",
+                  "    ",
+                  "    console.log('✅ Async task started!');",
+                  "    console.log('📋 Task ID:', jsonData.taskId);",
+                  "    console.log('🔗 Status URL:', jsonData.statusUrl);",
+                  "    console.log('🔗 Result URL:', jsonData.resultUrl);",
+                  "    ",
+                  "    pm.test('Async task created', function () {",
+                  "        pm.response.to.have.status(202);",
+                  "        pm.expect(jsonData).to.have.property('taskId');",
                   "        pm.expect(jsonData.status).to.eql('PENDING');",
                   "    });",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Unauthorized - please login first');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -178,12 +440,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "v1", "generate", "async"]
             },
-            "description": "Step 1: Start generation and save task ID to environment variable"
+            "description": "Start async generation. Returns immediately with task ID. Requires authentication."
           },
           "response": []
         },
         {
-          "name": "2. Poll Status",
+          "name": "Check Task Status",
           "event": [
             {
               "listen": "test",
@@ -191,20 +453,23 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const jsonData = pm.response.json();",
-                  "    console.log('Task status:', jsonData.status);",
                   "    ",
-                  "    pm.test('Task exists', function () {",
-                  "        pm.expect(jsonData.id).to.be.a('string');",
-                  "        pm.expect(jsonData.status).to.be.oneOf(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED']);",
-                  "    });",
+                  "    console.log('📊 Task Status:', jsonData.status);",
+                  "    console.log('🕐 Created:', jsonData.createdAt);",
                   "    ",
                   "    if (jsonData.status === 'COMPLETED') {",
-                  "        console.log('Task completed! Ready to get result.');",
+                  "        console.log('✅ Task completed! Ready to get result.');",
+                  "        console.log('🕑 Completed at:', jsonData.completedAt);",
                   "    } else if (jsonData.status === 'FAILED') {",
-                  "        console.log('Task failed:', jsonData.error);",
+                  "        console.log('❌ Task failed:', jsonData.error);",
                   "    } else {",
-                  "        console.log('Task still processing. Check again in a few seconds.');",
+                  "        console.log('⏳ Still processing...');",
                   "    }",
+                  "    ",
+                  "    pm.test('Status retrieved', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData.status).to.be.oneOf(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED']);",
+                  "    });",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -219,12 +484,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "v1", "generate", "status", "{{taskId}}"]
             },
-            "description": "Step 2: Poll task status (repeat until COMPLETED)"
+            "description": "Check the status of an async task. Requires authentication."
           },
           "response": []
         },
         {
-          "name": "3. Get Result",
+          "name": "Get Task Result",
           "event": [
             {
               "listen": "test",
@@ -233,25 +498,22 @@
                   "if (pm.response.code === 200) {",
                   "    const jsonData = pm.response.json();",
                   "    ",
-                  "    pm.test('Result has all components', function () {",
-                  "        pm.expect(jsonData).to.have.property('topic');",
+                  "    console.log('✅ Result retrieved successfully!');",
+                  "    console.log('📝 Topic:', jsonData.topic);",
+                  "    console.log('🎯 Research points:', jsonData.research.points.length);",
+                  "    console.log('📱 Platform:', jsonData.content.platform);",
+                  "    console.log('🖼️ Images:', jsonData.image.localImageUrls.length);",
+                  "    ",
+                  "    pm.test('Result complete', function () {",
+                  "        pm.response.to.have.status(200);",
                   "        pm.expect(jsonData).to.have.property('research');",
                   "        pm.expect(jsonData).to.have.property('content');",
                   "        pm.expect(jsonData).to.have.property('image');",
                   "    });",
-                  "    ",
-                  "    pm.test('Image has local URLs', function () {",
-                  "        if (jsonData.image.localImageUrls.length > 0) {",
-                  "            const url = jsonData.image.localImageUrls[0];",
-                  "            pm.expect(url).to.include('/generated-image/');",
-                  "        }",
-                  "    });",
-                  "    ",
-                  "    console.log('Generation complete!');",
-                  "    console.log('Topic:', jsonData.topic);",
-                  "    console.log('Platform:', jsonData.content.platform);",
-                  "    console.log('Research points:', jsonData.research.points.length);",
-                  "    console.log('Local image URLs:', jsonData.image.localImageUrls.length);",
+                  "} else if (pm.response.code === 400) {",
+                  "    console.log('⏳ Task not ready yet - still processing');",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('❌ Task not found');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -266,26 +528,254 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "v1", "generate", "result", "{{taskId}}"]
             },
-            "description": "Step 3: Get the completed result with all content and images"
+            "description": "Get the result of a completed async task. Requires authentication."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Image Access",
+      "name": "Complete Workflows",
       "item": [
         {
-          "name": "Access Generated Image",
+          "name": "1. Register & Generate Content",
+          "item": [
+            {
+              "name": "Step 1: Register",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const jsonData = pm.response.json();",
+                      "pm.environment.set('accessToken', jsonData.accessToken);",
+                      "pm.environment.set('refreshToken', jsonData.refreshToken);",
+                      "console.log('✅ Step 1 complete: User registered and tokens saved');"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.environment.set('workflowEmail', `workflow_${Date.now()}@example.com`);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{workflowEmail}}\",\n  \"name\": \"Workflow\",\n  \"surname\": \"Test\",\n  \"password\": \"WorkflowPass123!\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "register"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 2: Generate Content",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    console.log('✅ Step 2 complete: Content generated with authentication');",
+                      "} else {",
+                      "    console.log('❌ Generation failed - check authentication');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topic\": \"Test Workflow Content\",\n  \"platform\": \"twitter\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/generate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "generate"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "2. Async Generation Workflow",
+          "item": [
+            {
+              "name": "Step 1: Start Generation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const jsonData = pm.response.json();",
+                      "pm.environment.set('asyncTaskId', jsonData.taskId);",
+                      "console.log('✅ Async task started:', jsonData.taskId);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topic\": \"Async Workflow Test\",\n  \"platform\": \"linkedin\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/generate/async",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "generate", "async"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 2: Poll Status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const jsonData = pm.response.json();",
+                      "console.log('📊 Current status:', jsonData.status);",
+                      "if (jsonData.status !== 'COMPLETED') {",
+                      "    console.log('⏳ Run this request again in a few seconds...');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/generate/status/{{asyncTaskId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "generate", "status", "{{asyncTaskId}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 3: Get Result",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    console.log('✅ Result retrieved successfully');",
+                      "} else {",
+                      "    console.log('⏳ Task not ready - check status first');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/generate/result/{{asyncTaskId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "generate", "result", "{{asyncTaskId}}"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health & Monitoring",
+      "item": [
+        {
+          "name": "Health Check (Public)",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/generated-image/{{imageFilename}}",
+              "raw": "{{baseUrl}}/api/v1/health",
               "host": ["{{baseUrl}}"],
-              "path": ["generated-image", "{{imageFilename}}"]
+              "path": ["api", "v1", "health"]
             },
-            "description": "Access a generated image directly via HTTP. Set imageFilename environment variable to test."
+            "description": "Check service health. This endpoint is public and doesn't require authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Actuator Health (Public)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Spring Boot actuator health endpoint. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Actuator Metrics (Public)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "metrics"]
+            },
+            "description": "List available metrics. Public endpoint."
           },
           "response": []
         }
@@ -294,6 +784,84 @@
     {
       "name": "Validation Tests",
       "item": [
+        {
+          "name": "Invalid Email Format",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email\",\n  \"name\": \"Test\",\n  \"surname\": \"User\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Should return 400 - invalid email format"
+          },
+          "response": []
+        },
+        {
+          "name": "Short Password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"name\": \"Test\",\n  \"surname\": \"User\",\n  \"password\": \"short\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Should return 400 - password too short (min 8 chars)"
+          },
+          "response": []
+        },
+        {
+          "name": "Protected Endpoint Without Auth",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"Test\",\n  \"platform\": \"twitter\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "generate"]
+            },
+            "description": "Should return 401 - unauthorized (no token)"
+          },
+          "response": []
+        },
         {
           "name": "Invalid Platform",
           "request": {
@@ -306,223 +874,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"facebook\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+              "raw": "{\n  \"topic\": \"Test\",\n  \"platform\": \"facebook\",\n  \"tone\": \"casual\",\n  \"imageCount\": 1\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
+              "raw": "{{baseUrl}}/api/v1/generate",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
+              "path": ["api", "v1", "generate"]
             },
-            "description": "Should return 400 - platform must be twitter, linkedin, instagram, or blog."
-          },
-          "response": []
-        },
-        {
-          "name": "Invalid Tone",
-          "request": {
-            "method": "POST", 
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"twitter\",\n  \"tone\": \"aggressive\",\n  \"imageCount\": 1\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
-            },
-            "description": "Should return 400 - tone must be professional, casual, friendly, authoritative, or technical."
-          },
-          "response": []
-        },
-        {
-          "name": "Missing Topic",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
-            },
-            "description": "Should return 400 - topic is required."
-          },
-          "response": []
-        },
-        {
-          "name": "Invalid Image Count",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Test Topic\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 5\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
-            },
-            "description": "Should return 400 - image count must be 0-4."
-          },
-          "response": []
-        },
-        {
-          "name": "Non-existent Task",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/status/non-existent-task-id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "status", "non-existent-task-id"]
-            },
-            "description": "Should return 404 for non-existent task ID."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Result Before Completion",
-          "request": {
-            "method": "GET", 
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/result/{{pendingTaskId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "result", "{{pendingTaskId}}"]
-            },
-            "description": "Should return 400 when trying to get result for non-completed task."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Health & Monitoring",
-      "item": [
-        {
-          "name": "Health Check",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "health"]
-            },
-            "description": "Check service health status with active and total task counts."
-          },
-          "response": []
-        },
-        {
-          "name": "Actuator Health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/actuator/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["actuator", "health"]
-            },
-            "description": "Spring Boot Actuator health endpoint with detailed status."
-          },
-          "response": []
-        },
-        {
-          "name": "Actuator Metrics",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/actuator/metrics",
-              "host": ["{{baseUrl}}"],
-              "path": ["actuator", "metrics"]
-            },
-            "description": "List all available metrics including agent timing."
-          },
-          "response": []
-        },
-        {
-          "name": "Orchestration Metrics",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/actuator/metrics/orchestration.duration",
-              "host": ["{{baseUrl}}"],
-              "path": ["actuator", "metrics", "orchestration.duration"]
-            },
-            "description": "Get total orchestration timing metrics."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Load Testing",
-      "item": [
-        {
-          "name": "Concurrent Generation Test",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Load Test {{$randomInt}}\",\n  \"platform\": \"twitter\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
-            },
-            "description": "Test concurrent requests with random topics. Use Postman Runner for load testing."
-          },
-          "response": []
-        },
-        {
-          "name": "No Images Speed Test",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"topic\": \"Quick Test\",\n  \"platform\": \"twitter\",\n  \"tone\": \"casual\",\n  \"imageCount\": 0\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/generate/async",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "generate", "async"]
-            },
-            "description": "Fast test without image generation for performance baseline."
+            "description": "Should return 400 - invalid platform (requires auth)"
           },
           "response": []
         }
@@ -535,11 +894,12 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Pre-request script to log request details",
-          "console.log('🚀 Request URL:', pm.request.url.toString());",
-          "console.log('📋 Request Method:', pm.request.method);",
-          "if (pm.request.body && pm.request.body.raw) {",
-          "    console.log('📦 Request Body:', pm.request.body.raw);",
+          "// Global pre-request script",
+          "console.log('🚀 Request:', pm.request.method, pm.request.url.toString());",
+          "",
+          "// Check if access token exists and add to header if not using collection auth",
+          "if (pm.environment.get('accessToken') && !pm.request.headers.has('Authorization')) {",
+          "    // Token will be added by collection auth settings",
           "}"
         ]
       }
@@ -549,123 +909,32 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Common tests for all requests",
+          "// Global test script",
           "const responseTime = pm.response.responseTime;",
           "console.log('⏱️ Response time:', responseTime + 'ms');",
+          "console.log('📊 Status:', pm.response.code, pm.response.status);",
           "",
-          "// Performance test based on endpoint type",
+          "// Handle 401 responses globally",
+          "if (pm.response.code === 401) {",
+          "    const currentPath = pm.request.url.path.join('/');",
+          "    ",
+          "    // Don't warn for auth endpoints",
+          "    if (!currentPath.includes('auth')) {",
+          "        console.log('⚠️ Authentication required or token expired');",
+          "        console.log('💡 Try: 1) Login, 2) Refresh token, or 3) Register new user');",
+          "    }",
+          "}",
+          "",
+          "// Performance assertions",
           "if (pm.request.url.path.includes('async')) {",
-          "    pm.test('Async response time < 500ms', function () {",
+          "    pm.test('Async endpoint responds quickly', function () {",
           "        pm.expect(responseTime).to.be.below(500);",
           "    });",
-          "} else if (pm.request.url.path.includes('status') || pm.request.url.path.includes('result')) {",
-          "    pm.test('Status/Result response time < 200ms', function () {",
+          "} else if (pm.request.url.path.includes('status') || pm.request.url.path.includes('health')) {",
+          "    pm.test('Status endpoint responds quickly', function () {",
           "        pm.expect(responseTime).to.be.below(200);",
           "    });",
-          "} else {",
-          "    pm.test('General response time < 5s', function () {",
-          "        pm.expect(responseTime).to.be.below(5000);",
-          "    });",
-          "}",
-          "",
-          "// Test for successful async start responses (202)",
-          "if (pm.response.code === 202) {",
-          "    pm.test('Async task started successfully', function () {",
-          "        pm.response.to.have.status(202);",
-          "        const jsonData = pm.response.json();",
-          "        pm.expect(jsonData).to.have.property('taskId');",
-          "        pm.expect(jsonData).to.have.property('status');",
-          "        pm.expect(jsonData.status).to.eql('PENDING');",
-          "        pm.expect(jsonData).to.have.property('statusUrl');",
-          "        pm.expect(jsonData).to.have.property('resultUrl');",
-          "    });",
-          "}",
-          "",
-          "// Test for successful status responses (200)",
-          "if (pm.response.code === 200) {",
-          "    pm.test('Status code is 200', function () {",
-          "        pm.response.to.have.status(200);",
-          "    });",
-          "    ",
-          "    pm.test('Response has valid JSON', function () {",
-          "        pm.response.to.be.json;",
-          "    });",
-          "    ",
-          "    // For status endpoints",
-          "    if (pm.request.url.path.includes('status')) {",
-          "        const jsonData = pm.response.json();",
-          "        ",
-          "        pm.test('Status response has required fields', function () {",
-          "            pm.expect(jsonData).to.have.property('id');",
-          "            pm.expect(jsonData).to.have.property('status');",
-          "            pm.expect(jsonData).to.have.property('createdAt');",
-          "            pm.expect(jsonData).to.have.property('updatedAt');",
-          "        });",
-          "        ",
-          "        pm.test('Status is valid', function () {",
-          "            pm.expect(jsonData.status).to.be.oneOf(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED']);",
-          "        });",
-          "    }",
-          "    ",
-          "    // For result endpoints",
-          "    if (pm.request.url.path.includes('result') && !pm.request.url.path.includes('status')) {",
-          "        const jsonData = pm.response.json();",
-          "        ",
-          "        pm.test('Result has all components', function () {",
-          "            pm.expect(jsonData).to.have.property('topic');",
-          "            pm.expect(jsonData).to.have.property('research');",
-          "            pm.expect(jsonData).to.have.property('content');",
-          "            pm.expect(jsonData).to.have.property('image');",
-          "        });",
-          "        ",
-          "        pm.test('Research has required fields', function () {",
-          "            pm.expect(jsonData.research).to.have.property('points');",
-          "            pm.expect(jsonData.research.points).to.be.an('array');",
-          "        });",
-          "        ",
-          "        pm.test('Content has required fields', function () {",
-          "            pm.expect(jsonData.content).to.have.property('platform');",
-          "            pm.expect(jsonData.content).to.have.property('tone');",
-          "            pm.expect(jsonData.content).to.have.property('body');",
-          "        });",
-          "        ",
-          "        pm.test('Image has all URL types', function () {",
-          "            pm.expect(jsonData.image).to.have.property('openAiImageUrls');",
-          "            pm.expect(jsonData.image).to.have.property('localImagePaths');",
-          "            pm.expect(jsonData.image).to.have.property('localImageUrls');",
-          "        });",
-          "    }",
-          "    ",
-          "    // For health endpoints",
-          "    if (pm.request.url.path.includes('health')) {",
-          "        const jsonData = pm.response.json();",
-          "        ",
-          "        pm.test('Health response structure', function () {",
-          "            pm.expect(jsonData).to.have.property('status');",
-          "            pm.expect(jsonData).to.have.property('timestamp');",
-          "        });",
-          "    }",
-          "}",
-          "",
-          "// Test for validation errors (400)",
-          "if (pm.response.code === 400) {",
-          "    pm.test('Validation error response structure', function () {",
-          "        const jsonData = pm.response.json();",
-          "        pm.expect(jsonData).to.have.property('message');",
-          "        pm.expect(jsonData).to.have.property('status');",
-          "        pm.expect(jsonData.status).to.eql(400);",
-          "    });",
-          "}",
-          "",
-          "// Test for not found errors (404)",
-          "if (pm.response.code === 404) {",
-          "    pm.test('Not found error response', function () {",
-          "        pm.response.to.have.status(404);",
-          "    });",
-          "}",
-          "",
-          "// Log response status",
-          "console.log('✅ Response status:', pm.response.code, pm.response.status);"
+          "}"
         ]
       }
     }
@@ -673,51 +942,75 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "{{AGENTS_BASE_URL}}",
+      "value": "http://localhost:8080",
       "type": "string",
-      "description": "Base URL for the agents API (set via environment)"
+      "description": "Base URL for the API"
     },
     {
-      "key": "taskId", 
+      "key": "accessToken",
       "value": "",
       "type": "string",
-      "description": "Current task ID (auto-populated by workflow tests)"
+      "description": "JWT access token (auto-populated after login/register)"
     },
     {
-      "key": "pendingTaskId",
+      "key": "refreshToken",
       "value": "",
-      "type": "string", 
-      "description": "Task ID that's still pending (for testing error scenarios)"
+      "type": "string",
+      "description": "JWT refresh token (auto-populated after login/register)"
     },
     {
-      "key": "imageFilename",
-      "value": "20241204_143025_test_topic_abc12345.png",
+      "key": "testEmail",
+      "value": "",
       "type": "string",
-      "description": "Example image filename for testing image access"
+      "description": "Test email for registration (auto-generated)"
+    },
+    {
+      "key": "testPassword",
+      "value": "TestPassword123!",
+      "type": "string",
+      "description": "Test password for registration"
+    },
+    {
+      "key": "loginEmail",
+      "value": "test@example.com",
+      "type": "string",
+      "description": "Email for login testing"
+    },
+    {
+      "key": "loginPassword",
+      "value": "TestPassword123!",
+      "type": "string",
+      "description": "Password for login testing"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string",
+      "description": "Current async task ID"
     },
     {
       "key": "testTopic",
-      "value": "{{AGENTS_TEST_TOPIC}}",
+      "value": "Artificial Intelligence",
       "type": "string",
-      "description": "Test topic for generation (set via environment)"
+      "description": "Test topic for content generation"
     },
     {
       "key": "testPlatform",
-      "value": "{{AGENTS_TEST_PLATFORM}}",
+      "value": "twitter",
       "type": "string",
-      "description": "Test platform (set via environment)"
+      "description": "Test platform (twitter, linkedin, instagram, blog)"
     },
     {
       "key": "testTone",
-      "value": "{{AGENTS_TEST_TONE}}",
+      "value": "professional",
       "type": "string",
-      "description": "Test tone (set via environment)"
+      "description": "Test tone (professional, casual, friendly, authoritative, technical)"
     },
     {
       "key": "testImageCount",
-      "value": "{{AGENTS_TEST_IMAGE_COUNT}}",
-      "type": "string",
-      "description": "Test image count (set via environment)"
+      "value": "1",
+      "type": "number",
+      "description": "Number of images to generate (0-4)"
     }
   ]
 }

@@ -32,6 +32,11 @@ User Request → Research Agent (with Web Search) → Content Agent → Image Ag
 - **LangChain4j 0.27.1** - LLM integration and prompt management
 - **OpenAI APIs** - GPT-4o for text, DALL-E-3 for images
 - **SERP API** - Real-time web search integration
+- **MySQL 8.x** - Database for user management and authentication
+- **Spring Security 6** - JWT-based stateless authentication
+- **Flyway** - Database migration management
+- **BCrypt** - Password hashing and verification
+- **JWT (JJWT)** - Token generation and validation
 - **Caffeine Cache** - High-performance caching for search results
 - **OkHttp** - HTTP client for external APIs
 - **Maven** - Build and dependency management
@@ -42,19 +47,39 @@ User Request → Research Agent (with Web Search) → Content Agent → Image Ag
 ```
 src/main/java/za/co/digitalcowboy/agents/
 ├── agents/              # Core AI agents
+├── api/                 # REST API endpoints
 ├── config/              # Spring configuration
-├── controller/          # REST API endpoints  
 ├── domain/              # Domain models and DTOs
+│   └── auth/           # Authentication DTOs
 ├── graph/               # Agent orchestration
-├── service/             # Async generation service
+├── repository/          # JPA repositories
+├── security/            # JWT and security components
+├── service/             # Business logic services
 └── tools/               # External service integrations
 
+src/main/resources/
+├── db/migration/        # Flyway database migrations
+└── application.yml      # Application configuration
+
 src/test/java/
-└── za/co/digitalcowboy/agents/
-    └── AgentFlowTests.java  # Comprehensive test suite
+├── za/co/digitalcowboy/agents/
+│   ├── api/            # Controller integration tests
+│   ├── security/       # Security component tests
+│   └── service/        # Service unit tests
+└── resources/
+    └── application-test.yml  # Test configuration
 ```
 
 ## Key Features
+
+### JWT Authentication & Security
+- **Stateless Authentication**: JWT-based authentication with access and refresh tokens
+- **User Management**: Complete user registration and login system with MySQL persistence
+- **Password Security**: BCrypt hashing with configurable strength (default: 12)
+- **Token Management**: 30-minute access tokens, 7-day refresh tokens
+- **Role-Based Access**: Extensible role system with Spring Security integration
+- **Protected Endpoints**: All generation endpoints require valid authentication
+- **Database Migrations**: Flyway-managed schema with version control
 
 ### Real-Time Web Search Integration
 - **SERP API Integration**: Google search for current information
@@ -92,6 +117,18 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 # SERP API Configuration (for Web Search)
 SERPAPI_KEY=your_serpapi_key_here          # Required for web search
+
+# Database Configuration (Required for Authentication)
+DB_HOST=localhost                          # Default: localhost
+DB_PORT=3306                              # Default: 3306
+DB_NAME=java_ai_agents                    # Default: java_ai_agents
+DB_USERNAME=root                          # Default: root
+DB_PASSWORD=your_mysql_password           # Required
+
+# JWT Configuration (Required for Authentication)
+JWT_SECRET=your_base64_encoded_secret     # Required: base64 encoded secret (min 256 bits)
+JWT_ACCESS_TOKEN_EXPIRY_MINUTES=30        # Default: 30 minutes
+JWT_REFRESH_TOKEN_EXPIRY_DAYS=7           # Default: 7 days
 
 # Optional Configuration
 OPENAI_TEXT_MODEL=gpt-4o                    # Default: gpt-4o
@@ -135,9 +172,111 @@ images:
 
 ## API Documentation
 
+### Authentication Endpoints
+
+#### POST /api/v1/auth/register
+
+Registers a new user account.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "name": "John",
+  "surname": "Doe",
+  "password": "securePassword123"
+}
+```
+
+**Validation Rules:**
+- `email`: Required, valid email format, unique
+- `name`: Required, max 100 characters
+- `surname`: Required, max 100 characters  
+- `password`: Required, minimum 8 characters
+
+**Response (200 OK):**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 1800
+}
+```
+
+#### POST /api/v1/auth/login
+
+Authenticates a user and returns tokens.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 1800
+}
+```
+
+#### POST /api/v1/auth/refresh
+
+Refreshes access token using refresh token.
+
+**Request Headers:**
+```
+Authorization: Bearer <refresh_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 1800
+}
+```
+
+#### GET /api/v1/auth/me
+
+Returns the current authenticated user's profile. **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "name": "John",
+  "surname": "Doe",
+  "roles": ["USER"],
+  "active": true,
+  "createdAt": "2025-01-15T10:30:00Z"
+}
+```
+
+### Content Generation Endpoints (Protected)
+
+**Note:** All generation endpoints require authentication via `Authorization: Bearer <access_token>` header.
+
 ### POST /api/v1/generate
 
-Generates content using the agent workflow (synchronous).
+Generates content using the agent workflow (synchronous). **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
 
 **Request Body:**
 ```json
@@ -181,7 +320,13 @@ Generates content using the agent workflow (synchronous).
 
 ### POST /api/v1/generate/async
 
-Starts asynchronous content generation and returns immediately with a task ID.
+Starts asynchronous content generation and returns immediately with a task ID. **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
 
 **Request Body:**
 Same as synchronous endpoint.
@@ -198,7 +343,12 @@ Same as synchronous endpoint.
 
 ### GET /api/v1/generate/status/{taskId}
 
-Returns the current status of an async generation task.
+Returns the current status of an async generation task. **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+```
 
 **Response:**
 ```json
@@ -219,7 +369,12 @@ Returns the current status of an async generation task.
 
 ### GET /api/v1/generate/result/{taskId}
 
-Returns the result of a completed async generation task.
+Returns the result of a completed async generation task. **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+```
 
 **Response:**
 Same format as synchronous endpoint when status is `COMPLETED`, or 404 if not ready.
@@ -252,7 +407,9 @@ thread-name-prefix: "AsyncGeneration-"
 ### Prerequisites
 - Java 17+
 - Maven 3.6+
+- MySQL 8.x (running locally or remote)
 - OpenAI API key
+- SERP API key (optional, for web search)
 
 ### Quick Start
 
@@ -262,22 +419,54 @@ git clone <repository>
 cd java-ai-agents
 ```
 
-2. **Set environment variables:**
-```bash
-export OPENAI_API_KEY=your_key_here
+2. **Setup MySQL database:**
+```sql
+CREATE DATABASE java_ai_agents;
+CREATE USER 'ai_user'@'localhost' IDENTIFIED BY 'secure_password';
+GRANT ALL PRIVILEGES ON java_ai_agents.* TO 'ai_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
-3. **Build and run:**
+3. **Generate JWT secret:**
+```bash
+# Generate a secure 256-bit base64 encoded secret
+openssl rand -base64 32
+```
+
+4. **Set environment variables:**
+```bash
+export OPENAI_API_KEY=your_openai_key_here
+export DB_PASSWORD=secure_password
+export DB_USERNAME=ai_user
+export JWT_SECRET=your_base64_encoded_secret_from_step_3
+export SERPAPI_KEY=your_serpapi_key_here  # Optional
+```
+
+5. **Build and run:**
 ```bash
 mvn clean compile
 mvn spring-boot:run
 ```
 
-4. **Test the API:**
+6. **Register a user and test the API:**
 ```bash
-# Synchronous generation (20+ seconds)
+# First, register a user account
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "name": "Test",
+    "surname": "User",
+    "password": "securePassword123"
+  }'
+
+# Extract the access token from the response and use it for authenticated requests
+export ACCESS_TOKEN="your_access_token_from_registration_response"
+
+# Synchronous generation (20+ seconds) - now requires authentication
 curl -X POST http://localhost:8080/api/v1/generate \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -d '{
     "topic": "Machine Learning",
     "platform": "twitter", 
@@ -285,9 +474,10 @@ curl -X POST http://localhost:8080/api/v1/generate \
     "imageCount": 1
   }'
 
-# Async generation (returns immediately)
+# Async generation (returns immediately) - now requires authentication
 curl -X POST http://localhost:8080/api/v1/generate/async \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -d '{
     "topic": "Machine Learning",
     "platform": "twitter", 
@@ -295,11 +485,17 @@ curl -X POST http://localhost:8080/api/v1/generate/async \
     "imageCount": 1
   }'
 
-# Check async task status
-curl http://localhost:8080/api/v1/generate/status/TASK_ID
+# Check async task status - requires authentication
+curl -H "Authorization: Bearer $ACCESS_TOKEN" \
+  http://localhost:8080/api/v1/generate/status/TASK_ID
 
-# Get async result (when completed)
-curl http://localhost:8080/api/v1/generate/result/TASK_ID
+# Get async result (when completed) - requires authentication
+curl -H "Authorization: Bearer $ACCESS_TOKEN" \
+  http://localhost:8080/api/v1/generate/result/TASK_ID
+
+# Get current user profile
+curl -H "Authorization: Bearer $ACCESS_TOKEN" \
+  http://localhost:8080/api/v1/auth/me
 ```
 
 ### Build Commands
@@ -374,7 +570,17 @@ CMD ["java", "-jar", "app.jar"]
 
 ## Recent Changes & Features
 
-### Real-Time Web Search Integration & Timeout Improvements (Latest)
+### JWT Authentication System (Latest)
+- **Complete Authentication**: Full JWT-based user registration, login, and token refresh system
+- **User Management**: MySQL-based user persistence with Flyway database migrations
+- **Password Security**: BCrypt hashing with configurable strength (default: strength 12)
+- **Token Strategy**: 30-minute access tokens, 7-day refresh tokens with HMAC-SHA256 signing
+- **Protected Endpoints**: All generation endpoints now require valid authentication
+- **Spring Security 6**: Modern SecurityFilterChain configuration with stateless sessions
+- **Comprehensive Testing**: Full test coverage for authentication components and integration
+- **Error Handling**: Proper HTTP status codes (400/401/403) with meaningful error messages
+
+### Real-Time Web Search Integration & Timeout Improvements
 - **Web Search**: Integrated SERP API for real-time Google searches
 - **Hybrid Research**: ResearchAgent combines web search results with LLM knowledge
 - **Smart Queries**: Automatic generation of optimized search queries
@@ -498,10 +704,12 @@ mvn spring-boot:run
 
 ## Developer Notes
 
-**Last Updated**: 2025-09-05 (Added Real-Time Web Search Integration)
-**Version**: 1.1.0
+**Last Updated**: 2025-01-16 (Added JWT Authentication System)
+**Version**: 2.0.0
 **LangChain4j**: 0.27.1
 **Spring Boot**: 3.2.0
-**SERP API Client**: 2.0.3
+**JWT (JJWT)**: 0.12.3
+**MySQL**: 8.x
+**Flyway**: Latest Spring Boot managed version
 
 For questions or contributions, refer to the comprehensive test suite and existing patterns in the codebase.
