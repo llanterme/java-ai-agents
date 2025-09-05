@@ -6,6 +6,7 @@ import za.co.digitalcowboy.agents.agents.ResearchAgent;
 import za.co.digitalcowboy.agents.domain.*;
 import za.co.digitalcowboy.agents.graph.AgentGraph;
 import za.co.digitalcowboy.agents.tools.OpenAiImageTool;
+import za.co.digitalcowboy.agents.tools.SerpApiSearchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -32,6 +33,9 @@ public class AgentFlowTests {
     @Mock
     private OpenAiImageTool mockImageTool;
     
+    @Mock
+    private SerpApiSearchService mockSearchService;
+    
     private ObjectMapper objectMapper;
     private Timer mockTimer;
     private AgentGraph agentGraph;
@@ -42,11 +46,14 @@ public class AgentFlowTests {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         mockTimer = Timer.builder("test.timer").register(registry);
         
-        ResearchAgent researchAgent = new ResearchAgent(mockChatModel, objectMapper, mockTimer);
+        ResearchAgent researchAgent = new ResearchAgent(mockChatModel, objectMapper, mockTimer, mockSearchService);
         ContentAgent contentAgent = new ContentAgent(mockChatModel, objectMapper, mockTimer);
         ImageAgent imageAgent = new ImageAgent(mockChatModel, objectMapper, mockImageTool, mockTimer);
         
         agentGraph = new AgentGraph(researchAgent, contentAgent, imageAgent, mockTimer);
+        
+        // By default, mock search service as disabled
+        when(mockSearchService.isEnabled()).thenReturn(false);
     }
     
     @Test
@@ -205,6 +212,76 @@ public class AgentFlowTests {
     }
     
     @Test
+    void testResearchWithWebSearch() {
+        // Enable web search
+        when(mockSearchService.isEnabled()).thenReturn(true);
+        
+        // Mock search queries generation
+        String queries = """
+            Artificial Intelligence latest developments 2025
+            AI market size statistics
+            Machine learning applications today
+            """;
+        
+        // Mock web search results
+        WebSearchResponse searchResponse1 = new WebSearchResponse(
+            "Artificial Intelligence latest developments 2025",
+            List.of(
+                SearchResult.of("AI Breakthroughs in 2025", "Recent advances in generative AI...", "https://example.com/ai-2025"),
+                SearchResult.of("Current AI Market Report", "The AI market reached $200 billion...", "https://example.com/ai-market")
+            ),
+            null, 100L, 0.5
+        );
+        
+        WebSearchResponse searchResponse2 = new WebSearchResponse(
+            "AI market size statistics",
+            List.of(
+                SearchResult.of("Global AI Market Analysis", "Market valued at $207 billion in 2025...", "https://example.com/market-stats")
+            ),
+            null, 50L, 0.3
+        );
+        
+        WebSearchResponse searchResponse3 = new WebSearchResponse(
+            "Machine learning applications today",
+            List.of(
+                SearchResult.of("ML in Healthcare", "Machine learning revolutionizing diagnosis...", "https://example.com/ml-health")
+            ),
+            null, 75L, 0.4
+        );
+        
+        when(mockSearchService.searchMultiple(any(List.class)))
+            .thenReturn(List.of(searchResponse1, searchResponse2, searchResponse3));
+        
+        // Mock research response with sources
+        String researchJson = """
+            {
+              "points": [
+                "AI market reached $207 billion valuation in 2025 according to recent reports.",
+                "Generative AI leads breakthrough innovations across multiple industry sectors.",
+                "Machine learning revolutionizes healthcare with improved diagnostic accuracy.",
+                "Natural language processing capabilities advance significantly with new models.",
+                "Computer vision applications expand into autonomous systems and robotics."
+              ],
+              "sources": [
+                "https://example.com/ai-2025",
+                "https://example.com/market-stats"
+              ]
+            }
+            """;
+        
+        when(mockChatModel.generate(anyString()))
+            .thenReturn(queries)
+            .thenReturn(researchJson);
+        
+        ResearchAgent researchAgent = new ResearchAgent(mockChatModel, objectMapper, mockTimer, mockSearchService);
+        ResearchPoints result = researchAgent.research("Artificial Intelligence");
+        
+        assertThat(result.points()).hasSize(5);
+        assertThat(result.sources()).isNotEmpty();
+        assertThat(result.sources()).contains("https://example.com/ai-2025");
+    }
+    
+    @Test
     void testResearchConstraints() {
         String researchJson = """
             {
@@ -222,7 +299,7 @@ public class AgentFlowTests {
         
         when(mockChatModel.generate(anyString())).thenReturn(researchJson);
         
-        ResearchAgent researchAgent = new ResearchAgent(mockChatModel, objectMapper, mockTimer);
+        ResearchAgent researchAgent = new ResearchAgent(mockChatModel, objectMapper, mockTimer, mockSearchService);
         ResearchPoints result = researchAgent.research("Test Topic");
         
         assertThat(result.points()).hasSizeBetween(5, 7);

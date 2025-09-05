@@ -9,11 +9,13 @@ The Java AI Agents system implements a sequential workflow orchestrating three s
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │  Research Agent │───▶│  Content Agent  │───▶│   Image Agent   │
+│  + Web Search   │    │                 │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          ▼                       ▼                       ▼
    5-7 Factual            Platform-Specific       AI-Generated
    Bullet Points           Content + Tone            Images
+   + Source URLs                                   (2min timeout)
 ```
 
 ### Core Components
@@ -57,28 +59,43 @@ state.setImage(imageResult);
 
 ### Research Agent
 
-**Responsibility**: Convert topic to structured research points
+**Responsibility**: Convert topic to structured research points with real-time web data
 **Input**: Topic string
-**Output**: 5-7 factual bullet points with optional sources
+**Output**: 5-7 factual bullet points with source URLs
 **Constraints**: 
 - Max 25 words per bullet
 - Neutral, verifiable facts
 - No marketing language
+- Real-time information when SERP API enabled
 
-**Design Decisions**:
-- **JSON Schema Validation**: Ensures consistent structure
-- **Fallback Strategy**: Returns error message as research point
-- **Word Count Validation**: Warns on constraint violations
+**Hybrid Research Architecture**:
 
 ```java
 ResearchPoints research(String topic) {
-    // 1. Generate structured prompt
-    // 2. Call LLM with schema constraints  
-    // 3. Parse and validate JSON response
-    // 4. Apply business rules (5-7 points, 25 words max)
-    // 5. Return structured result with fallback
+    if (webSearchEnabled) {
+        return researchWithWebSearch(topic);
+    } else {
+        return researchWithoutWebSearch(topic);
+    }
+}
+
+private ResearchPoints researchWithWebSearch(String topic) {
+    // 1. Generate 2-3 optimized search queries using LLM
+    // 2. Search web using SERP API for each query
+    // 3. Extract and combine search results
+    // 4. Synthesize web data + LLM knowledge into bullet points
+    // 5. Include source URLs for verification
+    // 6. Cache results for 1 hour
 }
 ```
+
+**Design Decisions**:
+- **Hybrid Approach**: Combines web search with LLM synthesis
+- **Smart Query Generation**: LLM creates optimized search queries
+- **Source Attribution**: Real URLs for fact verification
+- **Graceful Fallback**: LLM-only research if search fails
+- **Result Caching**: 1-hour cache via Caffeine to reduce API costs
+- **JSON Schema Validation**: Ensures consistent structure across modes
 
 ### Content Agent
 
@@ -103,19 +120,23 @@ ResearchPoints research(String topic) {
 
 ### Image Agent
 
-**Responsibility**: Generate relevant images from content
+**Responsibility**: Generate relevant images from content with extended timeouts
 **Input**: Content draft + image count
-**Output**: Image URLs from OpenAI Images API
-**Process**: Content → Image Brief → API Call → URLs
+**Output**: Image URLs, local paths, and HTTP URLs
+**Process**: Content → Image Brief → API Call → Download → Serve
 
-**Two-Step Process**:
+**Multi-Step Process**:
 1. **Brief Generation**: LLM creates image description from content
-2. **Image Generation**: OpenAI Images API creates actual images
+2. **Image Generation**: OpenAI DALL-E API creates actual images (2min timeout)
+3. **Local Download**: Images downloaded and stored locally
+4. **HTTP Serving**: Static URLs provided for direct access
 
 **Design Decisions**:
-- **Separation of Concerns**: Prompt generation separate from image creation
-- **API Abstraction**: `OpenAiImageTool` encapsulates external API
-- **Error Resilience**: Empty result list on failures
+- **Dedicated Timeout**: Separate 2-minute timeout for DALL-E operations
+- **Multi-Format Output**: OpenAI URLs, local paths, and HTTP endpoints
+- **Local Storage**: Configurable download and caching system
+- **Error Resilience**: Graceful degradation when image generation fails
+- **API Abstraction**: `OpenAiImageTool` with dedicated HTTP client
 
 ## Error Handling Strategy
 
@@ -124,9 +145,10 @@ ResearchPoints research(String topic) {
 The system continues execution even when individual agents fail:
 
 ```
+Web Search Fails → LLM-only research → Content gets cached knowledge
 Research Fails → Empty bullet points → Content uses topic directly
 Content Fails → Generic content → Image uses topic for prompt
-Image Fails → Empty URL list → User gets text-only result
+Image Fails (timeout) → Empty URL list → User gets text-only result
 ```
 
 ### Error Boundaries
@@ -245,10 +267,15 @@ openai:
 
 ```yaml
 openai:
-  timeout-ms: 30000   # 30-second timeout for reliability
+  timeout-ms: 30000          # 30-second timeout for text generation
+  image-timeout-ms: 120000   # 2-minute timeout for image generation
 ```
 
-**Strategy**: Balance between user experience and API reliability
+**Multi-Tier Timeout Strategy**:
+- **Text Operations**: 30-second timeout for fast response
+- **Image Operations**: 2-minute timeout for DALL-E generation
+- **Web Search**: 30-second timeout for SERP API calls
+- **User Experience**: Balance between responsiveness and reliability
 
 ### Memory Management
 
@@ -272,6 +299,51 @@ All agents are stateless, enabling horizontal scaling:
 - **Metrics Export**: Prometheus/Grafana compatible
 - **Container Ready**: Minimal Docker image
 
+## Web Search Integration Architecture
+
+### SERP API Integration
+
+**Purpose**: Enable real-time information retrieval for research accuracy
+**API**: Google Search via SERP API
+**Caching**: Caffeine-based 1-hour result caching
+
+```java
+@Service
+public class SerpApiSearchService {
+    @Cacheable(value = "webSearchCache", key = "#query")
+    public WebSearchResponse search(String query);
+    
+    public List<WebSearchResponse> searchMultiple(List<String> queries);
+}
+```
+
+### Domain Model
+
+**SearchResult**: Individual search result with title, snippet, link
+**WebSearchResponse**: Container for multiple results with metadata
+
+```java
+public record SearchResult(String title, String snippet, String link, String displayLink, String date, Integer position);
+public record WebSearchResponse(String query, List<SearchResult> results, Map<String, Object> knowledgeGraph, Long totalResults, Double searchTime);
+```
+
+### Configuration Management
+
+```yaml
+serpapi:
+  api-key: ${SERPAPI_KEY:}
+  search-engine: google
+  location: "United States"
+  max-results: 5
+  enabled: true
+```
+
+**Benefits**:
+- **Current Information**: Access to latest data beyond LLM training cutoff
+- **Source Attribution**: Verifiable facts with original URLs
+- **Cost Control**: Configurable result limits and caching
+- **Fallback Support**: Graceful degradation to LLM-only research
+
 ## Future Enhancement Patterns
 
 ### Async Processing
@@ -285,12 +357,22 @@ CompletableFuture<OrchestrationResult> runAsync(TopicRequest request)
 
 ### Caching Strategy
 
+**Web Search Caching** (Implemented):
+```java
+@Cacheable(value = "webSearchCache", key = "#query")
+public WebSearchResponse search(String query)
+```
+
+**Future Research Caching**:
 ```java
 @Cacheable("research")
 ResearchPoints research(String topic)
 ```
 
-**Benefits**: Reduce API calls for similar topics
+**Benefits**: 
+- **Cost Reduction**: Minimize SERP API calls for repeated searches
+- **Performance**: Faster response for cached web searches
+- **Reliability**: Cached results available if APIs fail
 
 ### Vector Memory Integration
 
@@ -304,4 +386,4 @@ class PersonalizationService {
 
 **Benefits**: Learn user preferences and brand voice over time
 
-This design balances simplicity with extensibility, providing a solid foundation for production deployment while enabling future enhancements.
+This design balances simplicity with extensibility, providing a solid foundation for production deployment. The addition of real-time web search capabilities and optimized timeout configurations demonstrates the system's evolution toward more intelligent and reliable AI-powered content generation.

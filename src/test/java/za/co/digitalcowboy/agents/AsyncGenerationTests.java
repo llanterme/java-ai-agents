@@ -7,6 +7,7 @@ import za.co.digitalcowboy.agents.domain.*;
 import za.co.digitalcowboy.agents.graph.AgentGraph;
 import za.co.digitalcowboy.agents.service.AsyncGenerationService;
 import za.co.digitalcowboy.agents.tools.OpenAiImageTool;
+import za.co.digitalcowboy.agents.tools.SerpApiSearchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -36,6 +37,9 @@ public class AsyncGenerationTests {
     @Mock
     private Executor mockExecutor;
     
+    @Mock
+    private SerpApiSearchService mockSearchService;
+    
     private AsyncGenerationService asyncGenerationService;
     private AgentGraph agentGraph;
     
@@ -54,8 +58,11 @@ public class AsyncGenerationTests {
         when(mockImageTool.generateImage(anyString(), any(Integer.class), anyString()))
             .thenReturn(new ImageResult("test prompt", List.of(), List.of(), List.of()));
         
+        // Mock search service as disabled by default
+        when(mockSearchService.isEnabled()).thenReturn(false);
+        
         // Create agents with mocks
-        ResearchAgent researchAgent = new ResearchAgent(mockChatModel, objectMapper, mockTimer);
+        ResearchAgent researchAgent = new ResearchAgent(mockChatModel, objectMapper, mockTimer, mockSearchService);
         ContentAgent contentAgent = new ContentAgent(mockChatModel, objectMapper, mockTimer);
         ImageAgent imageAgent = new ImageAgent(mockChatModel, objectMapper, mockImageTool, mockTimer);
         
