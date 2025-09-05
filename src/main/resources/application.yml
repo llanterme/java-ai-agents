@@ -14,6 +14,7 @@ openai:
   text-model: ${OPENAI_TEXT_MODEL:gpt-4o}
   image-model: ${OPENAI_IMAGE_MODEL:dall-e-3}
   timeout-ms: ${OPENAI_TIMEOUT_MS:30000}
+  image-timeout-ms: ${OPENAI_IMAGE_TIMEOUT_MS:120000}
   temperature: 0.1
   max-tokens: 2000
 
@@ -22,6 +23,13 @@ images:
   local-storage-path: ${IMAGES_STORAGE_PATH:./generated-images}
   keep-remote-url: ${IMAGES_KEEP_REMOTE_URL:false}
   base-url: ${IMAGES_BASE_URL:http://localhost:8080}
+
+serpapi:
+  api-key: ${SERPAPI_KEY:}
+  search-engine: ${SERPAPI_ENGINE:google}
+  location: ${SERPAPI_LOCATION:United States}
+  max-results: ${SERPAPI_MAX_RESULTS:5}
+  enabled: ${SERPAPI_ENABLED:true}
 
 logging:
   level:

@@ -7,15 +7,23 @@ A comprehensive Java-based agentic system that orchestrates multiple AI agents f
 This system implements a sequential agent workflow using **LangChain4j** and **Spring Boot 3+**:
 
 ```
-User Request → Research Agent → Content Agent → Image Agent → Response
+User Request → Research Agent (with Web Search) → Content Agent → Image Agent → Response
 ```
 
 ### Core Components
 
-1. **Research Agent** (`ResearchAgent.java`): Generates 5-7 bullet points of research insights
+1. **Research Agent** (`ResearchAgent.java`): 
+   - Generates 5-7 bullet points of research insights
+   - **NEW**: Integrates real-time web search via SERP API
+   - Combines current web data with LLM knowledge
+   - Provides source attribution for facts
 2. **Content Agent** (`ContentAgent.java`): Creates platform-specific content (Twitter, LinkedIn, Instagram, Blog)
 3. **Image Agent** (`ImageAgent.java`): Generates image briefs and creates images using DALL-E
 4. **Agent Graph** (`AgentGraph.java`): Orchestrates the sequential workflow with error handling
+5. **Web Search Service** (`SerpApiSearchService.java`): 
+   - **NEW**: Performs real-time Google searches
+   - Caches results to reduce API costs
+   - Extracts organic results and knowledge graphs
 
 ## Technology Stack
 
@@ -23,6 +31,8 @@ User Request → Research Agent → Content Agent → Image Agent → Response
 - **Spring Boot 3.2.0** - Web framework and dependency injection
 - **LangChain4j 0.27.1** - LLM integration and prompt management
 - **OpenAI APIs** - GPT-4o for text, DALL-E-3 for images
+- **SERP API** - Real-time web search integration
+- **Caffeine Cache** - High-performance caching for search results
 - **OkHttp** - HTTP client for external APIs
 - **Maven** - Build and dependency management
 - **JUnit 5** - Testing framework with comprehensive mocks
@@ -46,6 +56,13 @@ src/test/java/
 
 ## Key Features
 
+### Real-Time Web Search Integration
+- **SERP API Integration**: Google search for current information
+- **Hybrid Research**: Combines web search results with LLM knowledge
+- **Smart Query Generation**: LLM generates optimized search queries
+- **Source Attribution**: Links to original sources for verification
+- **Result Caching**: 1-hour cache to reduce API costs
+
 ### Platform-Specific Content Generation
 - **Twitter**: ≤280 characters, hashtags, casual tone
 - **LinkedIn**: 3-5 paragraphs, professional networking
@@ -61,6 +78,7 @@ src/test/java/
 ### Error Handling & Resilience
 - **Graceful Degradation**: Failed agents don't break the workflow
 - **Fallback Responses**: Default content when APIs fail
+- **Web Search Fallback**: Continues with LLM-only if search fails
 - **Comprehensive Logging**: Structured logging with SLF4J
 - **Metrics & Observability**: Micrometer timers for performance tracking
 
@@ -72,10 +90,20 @@ src/test/java/
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key_here
 
+# SERP API Configuration (for Web Search)
+SERPAPI_KEY=your_serpapi_key_here          # Required for web search
+
 # Optional Configuration
 OPENAI_TEXT_MODEL=gpt-4o                    # Default: gpt-4o
 OPENAI_IMAGE_MODEL=dall-e-3                 # Default: dall-e-3
-OPENAI_TIMEOUT_MS=30000                     # Default: 30000
+OPENAI_TIMEOUT_MS=30000                     # Default: 30000 (text generation)
+OPENAI_IMAGE_TIMEOUT_MS=120000              # Default: 120000 (image generation)
+
+# Web Search Configuration
+SERPAPI_ENGINE=google                       # Default: google
+SERPAPI_LOCATION=United States              # Default: United States
+SERPAPI_MAX_RESULTS=5                       # Default: 5
+SERPAPI_ENABLED=true                        # Default: true
 
 # Image Management
 IMAGES_DOWNLOAD_ENABLED=true               # Default: true
@@ -93,6 +121,8 @@ openai:
   api-key: ${OPENAI_API_KEY:}
   text-model: ${OPENAI_TEXT_MODEL:gpt-4o}
   image-model: ${OPENAI_IMAGE_MODEL:dall-e-3}
+  timeout-ms: ${OPENAI_TIMEOUT_MS:30000}
+  image-timeout-ms: ${OPENAI_IMAGE_TIMEOUT_MS:120000}
   temperature: 0.1
   max-tokens: 2000
 
@@ -344,7 +374,17 @@ CMD ["java", "-jar", "app.jar"]
 
 ## Recent Changes & Features
 
-### Async Generation System (Latest)
+### Real-Time Web Search Integration & Timeout Improvements (Latest)
+- **Web Search**: Integrated SERP API for real-time Google searches
+- **Hybrid Research**: ResearchAgent combines web search results with LLM knowledge
+- **Smart Queries**: Automatic generation of optimized search queries
+- **Source Attribution**: Links to original content for verification
+- **Caching**: Caffeine cache implementation for 1-hour result caching
+- **Graceful Fallback**: LLM-only research if search fails
+- **Timeout Fix**: Separate 2-minute timeout for DALL-E image generation
+- **Configuration**: OPENAI_IMAGE_TIMEOUT_MS environment variable
+
+### Async Generation System
 - Added `/api/v1/generate/async` endpoint for non-blocking generation
 - Task status tracking with `/api/v1/generate/status/{taskId}` 
 - Result retrieval with `/api/v1/generate/result/{taskId}`
@@ -391,7 +431,15 @@ Error: Twitter content exceeds 280 characters
 Solution: System automatically truncates, warning logged
 ```
 
-4. **Async Endpoint Taking 20+ Seconds (FIXED)**
+4. **Image Generation Timeout Errors**
+```
+Error: java.net.SocketTimeoutException: timeout (in OpenAiImageTool)
+Cause: DALL-E image generation takes 30-120 seconds but timeout is 30s
+Solution: Use separate timeout for image generation
+Configuration: Set OPENAI_IMAGE_TIMEOUT_MS=120000 (2 minutes)
+```
+
+5. **Async Endpoint Taking 20+ Seconds (FIXED)**
 ```
 Issue: /api/v1/generate/async was running synchronously instead of async
 Cause: Spring @Async self-invocation problem in AsyncGenerationService
@@ -399,7 +447,7 @@ Fix: Replaced @Async with CompletableFuture.runAsync() to avoid proxy bypass
 Result: Async endpoint now returns in ~50ms as expected
 ```
 
-5. **Task Not Found After Restart**
+6. **Task Not Found After Restart**
 ```
 Error: Async task returns null after application restart
 Cause: In-memory storage (ConcurrentHashMap) loses data on restart
@@ -450,9 +498,10 @@ mvn spring-boot:run
 
 ## Developer Notes
 
-**Last Updated**: 2025-09-04 (Added Async Generation System)
-**Version**: 1.0.0
+**Last Updated**: 2025-09-05 (Added Real-Time Web Search Integration)
+**Version**: 1.1.0
 **LangChain4j**: 0.27.1
 **Spring Boot**: 3.2.0
+**SERP API Client**: 2.0.3
 
 For questions or contributions, refer to the comprehensive test suite and existing patterns in the codebase.

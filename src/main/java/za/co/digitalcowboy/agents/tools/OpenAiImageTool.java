@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +28,7 @@ public class OpenAiImageTool {
     private final boolean keepRemoteUrl;
     private final String baseUrl;
     
-    public OpenAiImageTool(OkHttpClient httpClient, ObjectMapper objectMapper, 
+    public OpenAiImageTool(@Qualifier("imageHttpClient") OkHttpClient httpClient, ObjectMapper objectMapper, 
                           OpenAiProperties openAiProperties, ImageDownloadService imageDownloadService,
                           @Value("${images.keep-remote-url}") boolean keepRemoteUrl,
                           @Value("${images.base-url}") String baseUrl) {

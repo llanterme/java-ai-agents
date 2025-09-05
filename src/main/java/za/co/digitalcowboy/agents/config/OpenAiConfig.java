@@ -24,6 +24,9 @@ public class OpenAiConfig {
     @Value("${openai.timeout-ms}")
     private int timeoutMs;
 
+    @Value("${openai.image-timeout-ms}")
+    private int imageTimeoutMs;
+
     @Value("${openai.temperature}")
     private double temperature;
 
@@ -54,9 +57,18 @@ public class OpenAiConfig {
                 .build();
     }
 
+    @Bean("imageHttpClient")
+    public OkHttpClient imageHttpClient() {
+        return new OkHttpClient.Builder()
+                .connectTimeout(Duration.ofMillis(imageTimeoutMs))
+                .readTimeout(Duration.ofMillis(imageTimeoutMs))
+                .writeTimeout(Duration.ofMillis(imageTimeoutMs))
+                .build();
+    }
+
     @Bean
     public OpenAiProperties openAiProperties() {
-        return new OpenAiProperties(apiKey, textModel, imageModel, timeoutMs, temperature, maxTokens);
+        return new OpenAiProperties(apiKey, textModel, imageModel, timeoutMs, imageTimeoutMs, temperature, maxTokens);
     }
 
     public record OpenAiProperties(
@@ -64,6 +76,7 @@ public class OpenAiConfig {
             String textModel,
             String imageModel,
             int timeoutMs,
+            int imageTimeoutMs,
             double temperature,
             int maxTokens
     ) {}
