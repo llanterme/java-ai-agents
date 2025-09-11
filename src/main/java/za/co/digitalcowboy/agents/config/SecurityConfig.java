@@ -43,6 +43,9 @@ public class SecurityConfig {
                 // Authentication endpoints - public
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 
+                // OAuth callback endpoints - public (for LinkedIn/social media redirects)
+                .requestMatchers(HttpMethod.GET, "/api/v1/connections/*/callback").permitAll()
+                
                 // Health and actuator endpoints - public
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers(HttpMethod.GET, "/actuator/**").permitAll()
