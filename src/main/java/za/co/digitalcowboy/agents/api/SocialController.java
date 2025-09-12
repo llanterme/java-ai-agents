@@ -1,14 +1,17 @@
 package za.co.digitalcowboy.agents.api;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import za.co.digitalcowboy.agents.domain.ErrorResponse;
 import za.co.digitalcowboy.agents.domain.social.LinkedInPostResponse;
+import za.co.digitalcowboy.agents.domain.social.dto.SocialConnectionStatus;
+import za.co.digitalcowboy.agents.domain.social.dto.SocialPostRequest;
+import za.co.digitalcowboy.agents.domain.social.dto.SocialPostResponse;
 import za.co.digitalcowboy.agents.repository.UserRepository;
 import za.co.digitalcowboy.agents.service.social.LinkedInPostingService;
 import za.co.digitalcowboy.agents.service.social.DirectLinkedInPostingService;
@@ -33,7 +36,7 @@ public class SocialController {
     
     @PostMapping("/linkedin/post")
     public ResponseEntity<?> postToLinkedIn(
-            @Valid @RequestBody LinkedInPostRequest request,
+            @Valid @RequestBody SocialPostRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         
         logger.info("LinkedIn post request from user: {}", userDetails.getUsername());
@@ -55,7 +58,7 @@ public class SocialController {
                     
                     logger.info("LinkedIn post created successfully via OAuth for user {}: {}", userId, response.getId());
                     
-                    return ResponseEntity.ok(new LinkedInPostResponseDto(
+                    return ResponseEntity.ok(new SocialPostResponse(
                         response.getId(),
                         response.getState(),
                         response.getLinkedInPostUrl(),
@@ -72,7 +75,7 @@ public class SocialController {
                     logger.info("Attempting direct token fallback for user {}", userId);
                     String postId = directLinkedInPostingService.postToLinkedIn(request.getText(), request.getImagePath());
                     
-                    return ResponseEntity.ok(new LinkedInPostResponseDto(
+                    return ResponseEntity.ok(new SocialPostResponse(
                         postId,
                         "PUBLISHED", 
                         "https://www.linkedin.com/feed/update/" + postId,
@@ -106,7 +109,7 @@ public class SocialController {
             
             boolean isConnected = linkedInPostingService.validateConnection(userId);
             
-            return ResponseEntity.ok(new LinkedInStatusResponse(
+            return ResponseEntity.ok(new SocialConnectionStatus(
                 isConnected,
                 isConnected ? "LinkedIn connection is active and ready for posting" : "LinkedIn connection required"
             ));
@@ -117,98 +120,6 @@ public class SocialController {
                 "Failed to check LinkedIn status", 
                 500
             ));
-        }
-    }
-    
-    // DTOs
-    public static class LinkedInPostRequest {
-        @NotBlank(message = "Text is required")
-        private String text;
-        
-        private String imagePath; // Optional
-        
-        public LinkedInPostRequest() {}
-        
-        public String getText() {
-            return text;
-        }
-        
-        public void setText(String text) {
-            this.text = text;
-        }
-        
-        public String getImagePath() {
-            return imagePath;
-        }
-        
-        public void setImagePath(String imagePath) {
-            this.imagePath = imagePath;
-        }
-    }
-    
-    public static class LinkedInPostResponseDto {
-        private final String postId;
-        private final String state;
-        private final String postUrl;
-        private final String message;
-        
-        public LinkedInPostResponseDto(String postId, String state, String postUrl, String message) {
-            this.postId = postId;
-            this.state = state;
-            this.postUrl = postUrl;
-            this.message = message;
-        }
-        
-        public String getPostId() {
-            return postId;
-        }
-        
-        public String getState() {
-            return state;
-        }
-        
-        public String getPostUrl() {
-            return postUrl;
-        }
-        
-        public String getMessage() {
-            return message;
-        }
-    }
-    
-    public static class LinkedInStatusResponse {
-        private final boolean connected;
-        private final String message;
-        
-        public LinkedInStatusResponse(boolean connected, String message) {
-            this.connected = connected;
-            this.message = message;
-        }
-        
-        public boolean isConnected() {
-            return connected;
-        }
-        
-        public String getMessage() {
-            return message;
-        }
-    }
-    
-    public static class ErrorResponse {
-        private final String message;
-        private final int status;
-        
-        public ErrorResponse(String message, int status) {
-            this.message = message;
-            this.status = status;
-        }
-        
-        public String getMessage() {
-            return message;
-        }
-        
-        public int getStatus() {
-            return status;
         }
     }
 }

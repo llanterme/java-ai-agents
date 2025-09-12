@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import za.co.digitalcowboy.agents.domain.ErrorResponse;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -116,11 +117,4 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
-    
-    public record ErrorResponse(
-        String message,
-        int status,
-        LocalDateTime timestamp,
-        Map<String, String> details
-    ) {}
 }
