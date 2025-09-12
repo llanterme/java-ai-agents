@@ -141,7 +141,19 @@ public class OAuthConnectionService {
         // Optionally revoke the token with the provider
         try {
             OAuthProviderService providerService = providerFactory.getProvider(provider);
+            
+            // DEBUG: Log token decryption for disconnect
+            String encryptedToken = account.getAccessToken();
+            logger.debug("DEBUG: Disconnect - Encrypted token from DB - length: {}, starts with: {}...", 
+                encryptedToken != null ? encryptedToken.length() : 0, 
+                encryptedToken != null && encryptedToken.length() > 10 ? encryptedToken.substring(0, 5) : "null");
+            
             String decryptedToken = encryptionService.decrypt(account.getAccessToken());
+            
+            logger.debug("DEBUG: Disconnect - Decrypted token - length: {}, starts with: {}...", 
+                decryptedToken != null ? decryptedToken.length() : 0, 
+                decryptedToken != null && decryptedToken.length() > 10 ? decryptedToken.substring(0, 5) : "null");
+            
             providerService.revokeToken(decryptedToken);
         } catch (Exception e) {
             logger.warn("Failed to revoke token with provider {}", providerName, e);
@@ -196,6 +208,43 @@ public class OAuthConnectionService {
             connectedAccountRepository.save(account);
             return false;
         }
+    }
+    
+    @Transactional(readOnly = true)
+    public Optional<ConnectedAccount> getActiveConnection(Long userId, String providerName) {
+        OAuthProvider provider = OAuthProvider.fromValue(providerName);
+        Optional<ConnectedAccount> account = connectedAccountRepository.findByUserIdAndProvider(userId, provider);
+        return account.filter(ConnectedAccount::isActive);
+    }
+    
+    @Transactional(readOnly = true)
+    public OAuthProviderService.UserInfo getUserInfo(Long userId, String providerName) {
+        OAuthProvider provider = OAuthProvider.fromValue(providerName);
+        ConnectedAccount account = connectedAccountRepository.findByUserIdAndProvider(userId, provider)
+            .orElseThrow(() -> new IllegalStateException("No connection found for user " + userId + " and provider " + providerName));
+        
+        if (!account.isActive()) {
+            throw new IllegalStateException("Connection is not active for user " + userId + " and provider " + providerName);
+        }
+        
+        OAuthProviderService providerService = providerFactory.getProvider(provider);
+        
+        // DEBUG: Log encrypted token before decryption
+        String encryptedToken = account.getAccessToken();
+        logger.debug("DEBUG: Encrypted token from DB - length: {}, starts with: {}..., ends with: ...{}", 
+            encryptedToken != null ? encryptedToken.length() : 0, 
+            encryptedToken != null && encryptedToken.length() > 10 ? encryptedToken.substring(0, 5) : "null",
+            encryptedToken != null && encryptedToken.length() > 10 ? encryptedToken.substring(encryptedToken.length() - 5) : "null");
+        
+        String decryptedToken = encryptionService.decrypt(account.getAccessToken());
+        
+        // DEBUG: Log decrypted token characteristics
+        logger.debug("DEBUG: Decrypted token - length: {}, starts with: {}..., ends with: ...{}", 
+            decryptedToken != null ? decryptedToken.length() : 0, 
+            decryptedToken != null && decryptedToken.length() > 10 ? decryptedToken.substring(0, 5) : "null",
+            decryptedToken != null && decryptedToken.length() > 10 ? decryptedToken.substring(decryptedToken.length() - 5) : "null");
+        
+        return providerService.getUserInfo(decryptedToken);
     }
     
     @Transactional(readOnly = true)

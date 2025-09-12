@@ -76,6 +76,12 @@ public class LinkedInOAuthProvider implements OAuthProviderService {
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             
             String accessToken = jsonNode.get("access_token").asText();
+            
+            // DEBUG: Log LinkedIn token exchange response
+            logger.debug("DEBUG: LinkedIn token exchange response - access_token length: {}, starts with: {}..., ends with: ...{}", 
+                accessToken != null ? accessToken.length() : 0, 
+                accessToken != null && accessToken.length() > 10 ? accessToken.substring(0, 5) : "null",
+                accessToken != null && accessToken.length() > 10 ? accessToken.substring(accessToken.length() - 5) : "null");
             String refreshToken = jsonNode.has("refresh_token") ? jsonNode.get("refresh_token").asText() : null;
             
             // LinkedIn tokens typically expire in 60 days, but let's check the response
@@ -201,7 +207,8 @@ public class LinkedInOAuthProvider implements OAuthProviderService {
         return Arrays.asList(
                 "openid",                  // Required for OpenID Connect authentication
                 "profile",                 // Required for lite profile (id, name, profile picture)
-                "email"                    // Required for email address
+                "email",                   // Required for email address
+                "w_member_social"          // Required for posting content on behalf of authenticated member
         );
     }
     

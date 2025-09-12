@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Entity
@@ -84,10 +85,21 @@ public class ConnectedAccount {
             return new ArrayList<>();
         }
         try {
+            // First try to parse as JSON array
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(scopes, new TypeReference<List<String>>() {});
+            List<String> scopeList = mapper.readValue(scopes, new TypeReference<List<String>>() {});
+            
+            // Handle case where we have a JSON array with a single comma-separated string element
+            if (scopeList.size() == 1 && scopeList.get(0).contains(",")) {
+                String singleElement = scopeList.get(0);
+                return Arrays.asList(singleElement.split("[,\\s]+"));
+            }
+            
+            return scopeList;
         } catch (Exception e) {
-            return new ArrayList<>();
+            // If that fails, treat as comma or space-separated string
+            String cleanScopes = scopes.replace("[", "").replace("]", "").replace("\"", "");
+            return Arrays.asList(cleanScopes.split("[,\\s]+"));
         }
     }
     
