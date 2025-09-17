@@ -50,11 +50,15 @@ src/main/java/za/co/digitalcowboy/agents/
 ├── api/                 # REST API endpoints
 ├── config/              # Spring configuration
 ├── domain/              # Domain models and DTOs
-│   └── auth/           # Authentication DTOs
+│   ├── auth/           # Authentication DTOs
+│   ├── oauth/          # OAuth entities and DTOs
+│   └── social/         # Social media DTOs
 ├── graph/               # Agent orchestration
 ├── repository/          # JPA repositories
 ├── security/            # JWT and security components
 ├── service/             # Business logic services
+│   ├── oauth/          # OAuth providers and services
+│   └── social/         # Social media posting services
 └── tools/               # External service integrations
 
 src/main/resources/
@@ -100,6 +104,14 @@ src/test/java/
 - **Configurable URLs**: Uses `images.base-url` for deployment flexibility
 - **Multiple Formats**: Returns OpenAI URLs, local paths, and HTTP URLs
 
+### LinkedIn OAuth & Social Posting
+- **OAuth 2.0 Integration**: Complete LinkedIn OAuth flow with secure token storage
+- **Token Encryption**: AES-256 encryption for access tokens in database
+- **Automatic Token Management**: 60-day token expiration tracking
+- **Content Posting**: Direct posting to LinkedIn with text and images
+- **Connection Management**: List, connect, and disconnect OAuth providers
+- **Scope Validation**: Ensures proper permissions (w_member_social) for posting
+
 ### Error Handling & Resilience
 - **Graceful Degradation**: Failed agents don't break the workflow
 - **Fallback Responses**: Default content when APIs fail
@@ -129,6 +141,12 @@ DB_PASSWORD=your_mysql_password           # Required
 JWT_SECRET=your_base64_encoded_secret     # Required: base64 encoded secret (min 256 bits)
 JWT_ACCESS_TOKEN_EXPIRY_MINUTES=30        # Default: 30 minutes
 JWT_REFRESH_TOKEN_EXPIRY_DAYS=7           # Default: 7 days
+
+# LinkedIn OAuth Configuration
+LINKEDIN_CLIENT_ID=your_linkedin_client_id  # Required for OAuth
+LINKEDIN_CLIENT_SECRET=your_linkedin_secret # Required for OAuth
+OAUTH_REDIRECT_BASE_URL=http://localhost:8080 # Base URL for OAuth callbacks
+TOKEN_ENCRYPTION_KEY=your_aes_256_key      # Required: 32-byte key for token encryption
 
 # Optional Configuration
 OPENAI_TEXT_MODEL=gpt-4o                    # Default: gpt-4o
@@ -367,6 +385,122 @@ Authorization: Bearer <access_token>
 - `COMPLETED`: Task finished successfully
 - `FAILED`: Task failed with error
 
+### POST /api/v1/connections/{provider}/connect
+
+Initiates OAuth connection for a social platform. **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Query Parameters:**
+- `redirect_uri` (optional): Custom redirect URI after OAuth completion
+
+**Response (200 OK):**
+```json
+{
+  "authorizationUrl": "https://www.linkedin.com/oauth/v2/authorization?...",
+  "provider": "linkedin"
+}
+```
+
+### GET /api/v1/connections/{provider}/callback
+
+Handles OAuth callback from provider (automatically called by OAuth provider).
+
+**Query Parameters:**
+- `code`: Authorization code from OAuth provider
+- `state`: State parameter for CSRF protection
+
+**Response:**
+Redirects to frontend success/error page
+
+### GET /api/v1/connections
+
+Lists all active OAuth connections for the authenticated user. **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "provider": "linkedin",
+    "providerUserId": "Li_xxxx",
+    "connectedAt": "2025-01-15T10:30:00Z",
+    "expiresAt": "2025-03-15T10:30:00Z",
+    "active": true,
+    "scopes": ["openid", "profile", "email", "w_member_social"]
+  }
+]
+```
+
+### DELETE /api/v1/connections/{provider}
+
+Disconnects an OAuth provider. **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Successfully disconnected from linkedin",
+  "provider": "linkedin"
+}
+```
+
+### POST /api/v1/social/linkedin/post
+
+Posts content to LinkedIn. **Requires Authentication and Active LinkedIn Connection**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "text": "Your post content here",
+  "imagePath": "/path/to/local/image.jpg"  // Optional
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "postId": "urn:li:share:7239583047289372673",
+  "state": "PUBLISHED",
+  "postUrl": "https://www.linkedin.com/feed/update/urn:li:share:7239583047289372673",
+  "message": "Post created successfully via OAuth"
+}
+```
+
+### GET /api/v1/social/linkedin/status
+
+Checks LinkedIn connection status. **Requires Authentication**
+
+**Request Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "connected": true,
+  "message": "LinkedIn connection is active and ready for posting"
+}
+```
+
 ### GET /api/v1/generate/result/{taskId}
 
 Returns the result of a completed async generation task. **Requires Authentication**
@@ -463,6 +597,15 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
 # Extract the access token from the response and use it for authenticated requests
 export ACCESS_TOKEN="your_access_token_from_registration_response"
 
+# Connect LinkedIn account (opens authorization URL in browser)
+curl -X POST http://localhost:8080/api/v1/connections/linkedin/connect \
+  -H "Authorization: Bearer $ACCESS_TOKEN" | jq -r '.authorizationUrl'
+# Open the returned URL in browser to authorize LinkedIn access
+
+# Check LinkedIn connection status
+curl -H "Authorization: Bearer $ACCESS_TOKEN" \
+  http://localhost:8080/api/v1/social/linkedin/status
+
 # Synchronous generation (20+ seconds) - now requires authentication
 curl -X POST http://localhost:8080/api/v1/generate \
   -H "Content-Type: application/json" \
@@ -496,6 +639,31 @@ curl -H "Authorization: Bearer $ACCESS_TOKEN" \
 # Get current user profile
 curl -H "Authorization: Bearer $ACCESS_TOKEN" \
   http://localhost:8080/api/v1/auth/me
+
+# Generate content and post to LinkedIn (complete workflow)
+# Step 1: Generate content
+RESPONSE=$(curl -X POST http://localhost:8080/api/v1/generate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -d '{
+    "topic": "AI Innovation",
+    "platform": "linkedin",
+    "tone": "professional",
+    "imageCount": 1
+  }')
+
+# Step 2: Extract generated text and image
+TEXT=$(echo $RESPONSE | jq -r '.content.body')
+IMAGE_PATH=$(echo $RESPONSE | jq -r '.image.localImagePaths[0]')
+
+# Step 3: Post to LinkedIn
+curl -X POST http://localhost:8080/api/v1/social/linkedin/post \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -d "{
+    \"text\": \"$TEXT\",
+    \"imagePath\": \"$IMAGE_PATH\"
+  }"
 ```
 
 ### Build Commands
@@ -570,7 +738,18 @@ CMD ["java", "-jar", "app.jar"]
 
 ## Recent Changes & Features
 
-### JWT Authentication System (Latest)
+### LinkedIn OAuth Integration & Social Posting (Latest)
+- **OAuth 2.0 Flow**: Complete LinkedIn OAuth implementation with authorization code flow
+- **Secure Token Storage**: AES-256 encryption for access tokens stored in MySQL
+- **Token Management**: Automatic expiration tracking (60-day LinkedIn tokens)
+- **Content Posting**: Direct posting to LinkedIn using v2 API (ugcPosts endpoint)
+- **Image Support**: Upload and attach images to LinkedIn posts
+- **Connection Management**: RESTful endpoints for managing OAuth connections
+- **Scope Validation**: Ensures w_member_social permission for posting
+- **Error Handling**: Graceful fallback and comprehensive error messages
+- **Database Schema**: New connected_accounts table with Flyway migrations
+
+### JWT Authentication System
 - **Complete Authentication**: Full JWT-based user registration, login, and token refresh system
 - **User Management**: MySQL-based user persistence with Flyway database migrations
 - **Password Security**: BCrypt hashing with configurable strength (default: strength 12)
@@ -704,8 +883,8 @@ mvn spring-boot:run
 
 ## Developer Notes
 
-**Last Updated**: 2025-01-16 (Added JWT Authentication System)
-**Version**: 2.0.0
+**Last Updated**: 2025-01-16 (Added LinkedIn OAuth Integration & Social Posting)
+**Version**: 2.1.0
 **LangChain4j**: 0.27.1
 **Spring Boot**: 3.2.0
 **JWT (JJWT)**: 0.12.3
