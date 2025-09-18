@@ -12,7 +12,9 @@ import za.co.digitalcowboy.agents.domain.social.LinkedInPostResponse;
 import za.co.digitalcowboy.agents.domain.social.dto.SocialConnectionStatus;
 import za.co.digitalcowboy.agents.domain.social.dto.SocialPostRequest;
 import za.co.digitalcowboy.agents.domain.social.dto.SocialPostResponse;
+import za.co.digitalcowboy.agents.domain.dto.GeneratedContentResponse;
 import za.co.digitalcowboy.agents.repository.UserRepository;
+import za.co.digitalcowboy.agents.service.GeneratedContentService;
 import za.co.digitalcowboy.agents.service.social.LinkedInPostingService;
 import za.co.digitalcowboy.agents.service.social.DirectLinkedInPostingService;
 
@@ -25,39 +27,65 @@ public class SocialController {
     private final LinkedInPostingService linkedInPostingService;
     private final DirectLinkedInPostingService directLinkedInPostingService;
     private final UserRepository userRepository;
-    
-    public SocialController(LinkedInPostingService linkedInPostingService, 
+    private final GeneratedContentService generatedContentService;
+
+    public SocialController(LinkedInPostingService linkedInPostingService,
                            DirectLinkedInPostingService directLinkedInPostingService,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           GeneratedContentService generatedContentService) {
         this.linkedInPostingService = linkedInPostingService;
         this.directLinkedInPostingService = directLinkedInPostingService;
         this.userRepository = userRepository;
+        this.generatedContentService = generatedContentService;
     }
     
     @PostMapping("/linkedin/post")
     public ResponseEntity<?> postToLinkedIn(
             @Valid @RequestBody SocialPostRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        logger.info("LinkedIn post request from user: {}", userDetails.getUsername());
-        
+
+        logger.info("LinkedIn post request for content ID: {} from user: {}", request.getId(), userDetails.getUsername());
+
         try {
             // Get user ID from authenticated user
             Long userId = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"))
                 .getId();
-            
+
+            // Fetch content from database
+            GeneratedContentResponse content;
+            try {
+                content = generatedContentService.getContentById(request.getId(), userDetails.getUsername());
+            } catch (IllegalArgumentException e) {
+                logger.warn("Content not found or access denied for content ID: {} by user: {}", request.getId(), userDetails.getUsername());
+                return ResponseEntity.badRequest().body(new ErrorResponse(
+                    "Content not found or you don't have permission to access it",
+                    400
+                ));
+            }
+
+            // Extract text and image path from content
+            String postText = content.content().body();
+            String imagePath = null;
+
+            // Get the first local image path if available
+            if (content.image() != null && content.image().localImagePaths() != null && !content.image().localImagePaths().isEmpty()) {
+                imagePath = content.image().localImagePaths().get(0);
+            }
+
+            logger.info("Posting content '{}' to LinkedIn for user: {}", content.topic(), userDetails.getUsername());
+
             // Try OAuth approach first
             try {
                 if (linkedInPostingService.validateConnection(userId)) {
                     LinkedInPostResponse response = linkedInPostingService.postToLinkedIn(
-                        userId, 
-                        request.getText(), 
-                        request.getImagePath()
+                        userId,
+                        postText,
+                        imagePath
                     );
-                    
+
                     logger.info("LinkedIn post created successfully via OAuth for user {}: {}", userId, response.getId());
-                    
+
                     return ResponseEntity.ok(new SocialPostResponse(
                         response.getId(),
                         response.getState(),
@@ -68,16 +96,16 @@ public class SocialController {
             } catch (Exception oauthError) {
                 logger.warn("OAuth posting failed for user {}, falling back to direct token approach: {}", userId, oauthError.getMessage());
             }
-            
+
             // Fallback to direct token approach if configured for testing
             if (directLinkedInPostingService != null && directLinkedInPostingService.isConfigured()) {
                 try {
                     logger.info("Attempting direct token fallback for user {}", userId);
-                    String postId = directLinkedInPostingService.postToLinkedIn(request.getText(), request.getImagePath());
-                    
+                    String postId = directLinkedInPostingService.postToLinkedIn(postText, imagePath);
+
                     return ResponseEntity.ok(new SocialPostResponse(
                         postId,
-                        "PUBLISHED", 
+                        "PUBLISHED",
                         "https://www.linkedin.com/feed/update/" + postId,
                         "Post created successfully via direct token fallback"
                     ));
@@ -85,16 +113,16 @@ public class SocialController {
                     logger.error("Direct token fallback also failed for user {}: {}", userId, directError.getMessage());
                 }
             }
-            
+
             return ResponseEntity.badRequest().body(new ErrorResponse(
                 "LinkedIn connection not found or expired. Please reconnect your LinkedIn account.",
                 400
             ));
-            
+
         } catch (Exception e) {
             logger.error("Failed to post to LinkedIn for user {}: {}", userDetails.getUsername(), e.getMessage(), e);
             return ResponseEntity.internalServerError().body(new ErrorResponse(
-                "Failed to create LinkedIn post: " + e.getMessage(), 
+                "Failed to create LinkedIn post: " + e.getMessage(),
                 500
             ));
         }

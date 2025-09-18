@@ -1,28 +1,22 @@
 package za.co.digitalcowboy.agents.domain.social.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class SocialPostRequest {
-    @NotBlank(message = "Text is required")
-    private String text;
-    
-    private String imagePath; // Optional
-    
+    @NotNull(message = "Content ID is required")
+    private Long id;
+
     public SocialPostRequest() {}
-    
-    public String getText() {
-        return text;
+
+    public SocialPostRequest(Long id) {
+        this.id = id;
     }
-    
-    public void setText(String text) {
-        this.text = text;
+
+    public Long getId() {
+        return id;
     }
-    
-    public String getImagePath() {
-        return imagePath;
-    }
-    
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }

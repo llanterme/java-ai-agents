@@ -1010,6 +1010,260 @@
               "response": []
             }
           ]
+        },
+        {
+          "name": "4. Generate & Post to LinkedIn Workflow",
+          "item": [
+            {
+              "name": "Step 1: Generate LinkedIn Content",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.environment.set('contentId', jsonData.id);",
+                      "    console.log('✅ Step 1: LinkedIn content generated and persisted');",
+                      "    console.log('💾 Content ID:', jsonData.id);",
+                      "    console.log('📝 Topic:', jsonData.topic);",
+                      "    console.log('📱 Platform:', jsonData.platform);",
+                      "    console.log('🖼️ Images:', jsonData.image.localImageUrls?.length || 0);",
+                      "    console.log('');",
+                      "    console.log('📄 Content Preview:');",
+                      "    console.log(jsonData.content.body.substring(0, 200) + '...');",
+                      "} else {",
+                      "    console.log('❌ Content generation failed - check authentication');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"topic\": \"AI Innovation in Modern Business\",\n  \"platform\": \"linkedin\",\n  \"tone\": \"professional\",\n  \"imageCount\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/generate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "generate"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 2: Check LinkedIn Connection",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const jsonData = pm.response.json();",
+                      "    console.log('✅ Step 2: LinkedIn connection status checked');",
+                      "    console.log('🔗 Connected:', jsonData.connected);",
+                      "    ",
+                      "    if (jsonData.connected) {",
+                      "        console.log('👍 Ready to proceed with posting!');",
+                      "    } else {",
+                      "        console.log('⚠️ Warning: LinkedIn not connected');",
+                      "        console.log('💡 Please connect LinkedIn account before posting');",
+                      "    }",
+                      "} else {",
+                      "    console.log('❌ Failed to check LinkedIn status');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/social/linkedin/status",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "social", "linkedin", "status"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 3: Post to LinkedIn",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const jsonData = pm.response.json();",
+                      "    console.log('✅ Step 3: Content posted to LinkedIn successfully!');",
+                      "    console.log('📝 Post ID:', jsonData.postId);",
+                      "    console.log('🔗 Post URL:', jsonData.postUrl);",
+                      "    console.log('📊 State:', jsonData.state);",
+                      "    console.log('💬 Method:', jsonData.message);",
+                      "    console.log('');",
+                      "    console.log('🎉 Complete workflow finished!');",
+                      "    console.log('📈 Content generated → persisted → posted to LinkedIn');",
+                      "} else if (pm.response.code === 400) {",
+                      "    const jsonData = pm.response.json();",
+                      "    console.log('❌ Step 3 failed:', jsonData.message);",
+                      "    ",
+                      "    if (jsonData.message.includes('LinkedIn connection')) {",
+                      "        console.log('💡 Connect LinkedIn account first, then retry');",
+                      "    } else if (jsonData.message.includes('Content not found')) {",
+                      "        console.log('💡 Content ID issue - check Step 1 succeeded');",
+                      "    }",
+                      "} else {",
+                      "    console.log('❌ Posting failed - check authentication and LinkedIn connection');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": {{contentId}}\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/social/linkedin/post",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "social", "linkedin", "post"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Social Media (Protected)",
+      "item": [
+        {
+          "name": "Post Content to LinkedIn",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    console.log('✅ LinkedIn post created successfully!');",
+                  "    console.log('📝 Post ID:', jsonData.postId);",
+                  "    console.log('🔗 Post URL:', jsonData.postUrl);",
+                  "    console.log('📊 State:', jsonData.state);",
+                  "    console.log('💬 Message:', jsonData.message);",
+                  "    ",
+                  "    pm.test('LinkedIn post successful', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('postId');",
+                  "        pm.expect(jsonData).to.have.property('state');",
+                  "        pm.expect(jsonData).to.have.property('postUrl');",
+                  "        pm.expect(jsonData).to.have.property('message');",
+                  "    });",
+                  "} else if (pm.response.code === 400) {",
+                  "    const jsonData = pm.response.json();",
+                  "    console.log('❌ LinkedIn posting failed:', jsonData.message);",
+                  "    ",
+                  "    if (jsonData.message.includes('LinkedIn connection')) {",
+                  "        console.log('💡 Please connect your LinkedIn account first');",
+                  "    } else if (jsonData.message.includes('Content not found')) {",
+                  "        console.log('💡 Please ensure the content ID exists and belongs to you');",
+                  "    }",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Unauthorized - please login first');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{contentId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/social/linkedin/post",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "social", "linkedin", "post"]
+            },
+            "description": "Post generated content to LinkedIn using content ID. Requires authentication and active LinkedIn OAuth connection. Uses the contentId from previous generation request."
+          },
+          "response": []
+        },
+        {
+          "name": "Check LinkedIn Connection Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    console.log('✅ LinkedIn status retrieved');",
+                  "    console.log('🔗 Connected:', jsonData.connected);",
+                  "    console.log('💬 Message:', jsonData.message);",
+                  "    ",
+                  "    if (jsonData.connected) {",
+                  "        console.log('👍 Ready to post to LinkedIn!');",
+                  "    } else {",
+                  "        console.log('⚠️ LinkedIn connection required - please connect your account');",
+                  "    }",
+                  "    ",
+                  "    pm.test('LinkedIn status retrieved', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('connected');",
+                  "        pm.expect(jsonData).to.have.property('message');",
+                  "        pm.expect(jsonData.connected).to.be.a('boolean');",
+                  "    });",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Unauthorized - please login first');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/social/linkedin/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "social", "linkedin", "status"]
+            },
+            "description": "Check if LinkedIn account is connected and ready for posting. Requires authentication."
+          },
+          "response": []
         }
       ]
     },
