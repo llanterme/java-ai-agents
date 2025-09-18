@@ -69,8 +69,8 @@ public class AsyncGenerationTests {
         // Create agent graph
         agentGraph = new AgentGraph(researchAgent, contentAgent, imageAgent, mockTimer);
         
-        // Create async service with mock executor
-        asyncGenerationService = new AsyncGenerationService(agentGraph, mockExecutor);
+        // Create async service with mock executor and null content service (not needed for these tests)
+        asyncGenerationService = new AsyncGenerationService(agentGraph, mockExecutor, null);
     }
     
     @Test

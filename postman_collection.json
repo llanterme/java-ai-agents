@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Java AI Agents API - Complete with Auth",
-    "description": "Complete test collection for Java AI Agents System with JWT Authentication, OpenAI integration, and async processing.\n\n**Authentication Flow:**\n1. Register a new user or login with existing credentials\n2. Access token is automatically saved and used for all protected endpoints\n3. Refresh token when needed\n\n**Key Features:**\n- JWT-based authentication with automatic token management\n- User registration and login\n- Token refresh mechanism\n- Protected content generation endpoints\n- Async generation with task tracking\n- Real-time web search integration\n- Local image download with HTTP URLs",
+    "description": "Complete test collection for Java AI Agents System with JWT Authentication, OpenAI integration, async processing, and content persistence.\n\n**Authentication Flow:**\n1. Register a new user or login with existing credentials\n2. Access token is automatically saved and used for all protected endpoints\n3. Refresh token when needed\n\n**Key Features:**\n- JWT-based authentication with automatic token management\n- User registration and login\n- Token refresh mechanism\n- Protected content generation endpoints (sync & async)\n- **NEW: Content persistence** - all generated content is automatically saved\n- **NEW: Content management** - view, retrieve, and delete your content library\n- Async generation with task tracking\n- Real-time web search integration\n- Local image download with HTTP URLs\n\n**Content Persistence:**\n- All generated content includes a unique ID in the response\n- Use the Content Management endpoints to view your content library\n- Content is user-scoped (users can only access their own content)\n- Complete CRUD operations: Create (via generation), Read, Delete",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -265,7 +265,7 @@
       "name": "Content Generation (Protected)",
       "item": [
         {
-          "name": "Generate Twitter Content",
+          "name": "Generate Twitter Content (with persistence)",
           "event": [
             {
               "listen": "test",
@@ -273,6 +273,12 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    // Save content ID if present",
+                  "    if (jsonData.id) {",
+                  "        pm.environment.set('contentId', jsonData.id);",
+                  "        console.log('💾 Content persisted with ID:', jsonData.id);",
+                  "    }",
                   "    ",
                   "    console.log('✅ Content generated successfully!');",
                   "    console.log('📝 Platform:', jsonData.content.platform);",
@@ -284,6 +290,7 @@
                   "        pm.expect(jsonData).to.have.property('research');",
                   "        pm.expect(jsonData).to.have.property('content');",
                   "        pm.expect(jsonData).to.have.property('image');",
+                  "        pm.expect(jsonData).to.have.property('id');",
                   "    });",
                   "    ",
                   "    pm.test('Twitter content constraints', function () {",
@@ -391,6 +398,143 @@
       ]
     },
     {
+      "name": "Content Management (Protected)",
+      "item": [
+        {
+          "name": "Get All My Content",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    console.log('✅ Retrieved', jsonData.length, 'content items');",
+                  "    ",
+                  "    if (jsonData.length > 0) {",
+                  "        const firstItem = jsonData[0];",
+                  "        pm.environment.set('contentId', firstItem.id);",
+                  "        ",
+                  "        console.log('📄 Latest content:');",
+                  "        console.log('  ID:', firstItem.id);",
+                  "        console.log('  Topic:', firstItem.topic);",
+                  "        console.log('  Platform:', firstItem.platform);",
+                  "        console.log('  Created:', firstItem.createdAt);",
+                  "    }",
+                  "    ",
+                  "    pm.test('Content list retrieved', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.be.an('array');",
+                  "    });",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Unauthorized - please login first');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/content",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "content"]
+            },
+            "description": "Retrieve all content generated by the authenticated user. Content is ordered by creation date (newest first)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Specific Content by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    console.log('✅ Content retrieved successfully!');",
+                  "    console.log('📄 Content details:');",
+                  "    console.log('  ID:', jsonData.id);",
+                  "    console.log('  Topic:', jsonData.topic);",
+                  "    console.log('  Platform:', jsonData.platform);",
+                  "    console.log('  Tone:', jsonData.tone);",
+                  "    console.log('  Images:', jsonData.image.localImageUrls?.length || 0);",
+                  "    console.log('  Created:', jsonData.createdAt);",
+                  "    ",
+                  "    pm.test('Content details retrieved', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('id');",
+                  "        pm.expect(jsonData).to.have.property('topic');",
+                  "        pm.expect(jsonData).to.have.property('content');",
+                  "        pm.expect(jsonData).to.have.property('research');",
+                  "        pm.expect(jsonData).to.have.property('image');",
+                  "    });",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('❌ Content not found or access denied');",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Unauthorized - please login first');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/content/{{contentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "content", "{{contentId}}"]
+            },
+            "description": "Retrieve a specific content item by ID. Users can only access their own content."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Content by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 204) {",
+                  "    console.log('✅ Content deleted successfully!');",
+                  "    console.log('🗑️ Content ID', pm.environment.get('contentId'), 'has been removed');",
+                  "    ",
+                  "    pm.test('Content deleted', function () {",
+                  "        pm.response.to.have.status(204);",
+                  "    });",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('❌ Content not found or already deleted');",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('❌ Unauthorized - please login first');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/content/{{contentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "content", "{{contentId}}"]
+            },
+            "description": "Delete a specific content item by ID. Users can only delete their own content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Async Generation (Protected)",
       "item": [
         {
@@ -489,7 +633,7 @@
           "response": []
         },
         {
-          "name": "Get Task Result",
+          "name": "Get Task Result (with persistence)",
           "event": [
             {
               "listen": "test",
@@ -497,6 +641,12 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const jsonData = pm.response.json();",
+                  "    ",
+                  "    // Save content ID if present (for persisted content)",
+                  "    if (jsonData.id) {",
+                  "        pm.environment.set('contentId', jsonData.id);",
+                  "        console.log('💾 Content persisted with ID:', jsonData.id);",
+                  "    }",
                   "    ",
                   "    console.log('✅ Result retrieved successfully!');",
                   "    console.log('📝 Topic:', jsonData.topic);",
@@ -509,6 +659,7 @@
                   "        pm.expect(jsonData).to.have.property('research');",
                   "        pm.expect(jsonData).to.have.property('content');",
                   "        pm.expect(jsonData).to.have.property('image');",
+                  "        pm.expect(jsonData).to.have.property('id');",
                   "    });",
                   "} else if (pm.response.code === 400) {",
                   "    console.log('⏳ Task not ready yet - still processing');",
@@ -717,6 +868,143 @@
                   "raw": "{{baseUrl}}/api/v1/generate/result/{{asyncTaskId}}",
                   "host": ["{{baseUrl}}"],
                   "path": ["api", "v1", "generate", "result", "{{asyncTaskId}}"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3. Complete Content Lifecycle",
+          "item": [
+            {
+              "name": "Step 1: Generate & Persist Content",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.environment.set('contentId', jsonData.id);",
+                      "    console.log('✅ Step 1: Content generated and persisted with ID:', jsonData.id);",
+                      "} else {",
+                      "    console.log('❌ Generation failed - check authentication');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\\n  \\\"topic\\\": \\\"Content Persistence Demo\\\",\\n  \\\"platform\\\": \\\"linkedin\\\",\\n  \\\"tone\\\": \\\"professional\\\",\\n  \\\"imageCount\\\": 1\\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/generate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "generate"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 2: View My Content List",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const jsonData = pm.response.json();",
+                      "    console.log('✅ Step 2: Found', jsonData.length, 'content items in my library');",
+                      "    if (jsonData.length > 0) {",
+                      "        console.log('📄 Latest:', jsonData[0].topic, '(ID:', jsonData[0].id + ')');",
+                      "    }",
+                      "} else {",
+                      "    console.log('❌ Failed to retrieve content list');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/content",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "content"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 3: Retrieve Specific Content",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const jsonData = pm.response.json();",
+                      "    console.log('✅ Step 3: Retrieved content details');",
+                      "    console.log('📝 Topic:', jsonData.topic);",
+                      "    console.log('📱 Platform:', jsonData.platform);",
+                      "    console.log('🎯 Research points:', jsonData.research.insights?.length || 0);",
+                      "} else {",
+                      "    console.log('❌ Failed to retrieve content details');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/content/{{contentId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "content", "{{contentId}}"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Step 4: Delete Content",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 204) {",
+                      "    console.log('✅ Step 4: Content deleted successfully');",
+                      "    console.log('🗑️ Content lifecycle complete!');",
+                      "} else {",
+                      "    console.log('❌ Failed to delete content');",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/content/{{contentId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "content", "{{contentId}}"]
                 }
               },
               "response": []
@@ -1011,6 +1299,12 @@
       "value": "1",
       "type": "number",
       "description": "Number of images to generate (0-4)"
+    },
+    {
+      "key": "contentId",
+      "value": "",
+      "type": "string",
+      "description": "Generated content ID for retrieval/deletion (auto-populated)"
     }
   ]
 }
