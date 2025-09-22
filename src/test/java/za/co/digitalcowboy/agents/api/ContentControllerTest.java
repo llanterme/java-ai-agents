@@ -51,7 +51,8 @@ class ContentControllerTest {
     void setUp() {
         GeneratedContentResponse.ResearchData research = new GeneratedContentResponse.ResearchData(
             "Artificial Intelligence",
-            Arrays.asList("Point 1", "Point 2", "Point 3")
+            Arrays.asList("Point 1", "Point 2", "Point 3"),
+            Arrays.asList("https://source1.com", "https://source2.com")
         );
 
         GeneratedContentResponse.ContentData content = new GeneratedContentResponse.ContentData(

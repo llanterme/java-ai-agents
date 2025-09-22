@@ -61,7 +61,6 @@ Content-Type: application/json
 
 ### Generate Content (Asynchronous)
 
-For long-running operations, use async generation:
 
 **Start Generation:**
 ```http
@@ -110,7 +109,48 @@ GET /api/v1/generate/result/550e8400-e29b-41d4-a716-446655440000
 Authorization: Bearer <access_token>
 ```
 
-**Result Response:** *(Same format as synchronous generation)*
+**Result Response:**
+
+``` json
+{
+    "topic": "Artificial Intelligence",
+    "research": {
+        "topic": "Artificial Intelligence",
+        "insights": [
+            "AI advancements in 2023 focus on innovations impacting technology and society.",
+            "AI technologies are increasingly integrated into various industries, enhancing efficiency and productivity.",
+            "Ethical considerations in AI development include bias, privacy, and decision-making transparency.",
+            "AI's impact on job markets includes automation of routine tasks and creation of new tech roles.",
+            "AI research in 2023 emphasizes improving machine learning models and data processing capabilities."
+        ],
+        "sources": [
+            "https://www.tiktok.com/@my_dad_is_super_cat/video/7535518757079354637",
+            "https://www.example.com/ai-research-2023",
+            "https://www.techjournal.com/ai-ethics-guide"
+        ]
+    },
+    "content": {
+        "platform": "twitter",
+        "tone": "professional",
+        "headline": "AI Advancements in 2023",
+        "body": "AI in 2023 is reshaping industries with enhanced efficiency and productivity. Ethical AI development is crucial, focusing on bias and transparency. #AI #Innovation",
+        "cta": ""
+    },
+    "image": {
+        "prompt": "Futuristic AI technology interface with abstract digital elements, editorial style, bright and dynamic lighting, innovative and forward-thinking mood, no text",
+        "openAiImageUrls": [],
+        "localImagePaths": [
+            "/Users/lukelanterme/Documents/Code/Personal/POC/java-ai-agents/./generated-images/20250918_114027_artificial_intelligence_be0dbac4.png"
+        ],
+        "localImageUrls": [
+            "http://localhost:8080/generated-image/20250918_114027_artificial_intelligence_be0dbac4.png"
+        ]
+    },
+    "id": 4
+}
+
+```
+
 
 ---
 
@@ -133,7 +173,11 @@ Authorization: Bearer <access_token>
     "platform": "linkedin",
     "tone": "professional",
     "imageCount": 1,
-    "research": { /* research data */ },
+    "research": {
+      "topic": "Topic",
+      "insights": ["Insight 1", "Insight 2"],
+      "sources": ["https://source1.com", "https://source2.com"]
+    },
     "content": { /* content data */ },
     "image": { /* image data */ },
     "createdAt": "2025-01-16T12:00:00Z",
@@ -145,7 +189,11 @@ Authorization: Bearer <access_token>
     "platform": "twitter",
     "tone": "casual",
     "imageCount": 2,
-    "research": { /* research data */ },
+    "research": {
+      "topic": "Topic",
+      "insights": ["Insight 1", "Insight 2"],
+      "sources": ["https://source1.com", "https://source2.com"]
+    },
     "content": { /* content data */ },
     "image": { /* image data */ },
     "createdAt": "2025-01-16T11:30:00Z",
@@ -277,8 +325,5 @@ The new integration provides:
 - ✅ **Automatic content persistence** with unique IDs
 - ✅ **Decoupled LinkedIn posting** using content IDs only
 - ✅ **Complete content management** CRUD operations
-- ✅ **Seamless workflows** from generation to social posting
-- ✅ **Enhanced error handling** with actionable messages
-- ✅ **User-scoped security** ensuring data privacy
 
 **Key Integration Point:** The UI only needs to manage content IDs - the backend handles all content fetching, image processing, and LinkedIn posting logic.

@@ -190,7 +190,7 @@ public class LinkedInPostingService {
                         "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
                     }
                 }
-                """, authorUrn, text.replace("\"", "\\\\\""), imageUrn);
+                """, authorUrn, escapeJsonString(text), imageUrn);
         } else {
             postRequestBody = String.format("""
                 {
@@ -208,9 +208,12 @@ public class LinkedInPostingService {
                         "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
                     }
                 }
-                """, authorUrn, text.replace("\"", "\\\\\""));
+                """, authorUrn, escapeJsonString(text));
         }
         
+        // Debug: Log the request body to verify JSON structure
+        logger.debug("LinkedIn post request body: {}", postRequestBody);
+
         RequestBody postBody = RequestBody.create(
             postRequestBody,
             MediaType.get("application/json")
@@ -255,6 +258,22 @@ public class LinkedInPostingService {
         }
     }
     
+    /**
+     * Properly escapes a string for use in JSON
+     */
+    private String escapeJsonString(String text) {
+        if (text == null) return "";
+
+        return text
+            .replace("\\", "\\\\")  // Escape backslashes first
+            .replace("\"", "\\\"")   // Escape quotes
+            .replace("\n", "\\n")    // Escape newlines
+            .replace("\r", "\\r")    // Escape carriage returns
+            .replace("\t", "\\t")    // Escape tabs
+            .replace("\b", "\\b")    // Escape backspace
+            .replace("\f", "\\f");   // Escape form feed
+    }
+
     public boolean validateConnection(Long userId) {
         try {
             ConnectedAccount connection = oauthConnectionService.getActiveConnection(userId, "linkedin")

@@ -36,6 +36,10 @@ public class GeneratedContent {
     @JdbcTypeCode(SqlTypes.JSON)
     private List<String> researchPoints;
 
+    @Column(name = "research_sources", columnDefinition = "JSON")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<String> researchSources;
+
     // Content data
     @Column(name = "content_headline", length = 500)
     private String contentHeadline;
@@ -105,8 +109,13 @@ public class GeneratedContent {
         );
 
         // Set research data
-        if (result.research() != null && result.research().points() != null) {
-            content.setResearchPoints(result.research().points());
+        if (result.research() != null) {
+            if (result.research().points() != null) {
+                content.setResearchPoints(result.research().points());
+            }
+            if (result.research().sources() != null) {
+                content.setResearchSources(result.research().sources());
+            }
         }
 
         // Set content data
@@ -183,6 +192,14 @@ public class GeneratedContent {
 
     public void setResearchPoints(List<String> researchPoints) {
         this.researchPoints = researchPoints;
+    }
+
+    public List<String> getResearchSources() {
+        return researchSources;
+    }
+
+    public void setResearchSources(List<String> researchSources) {
+        this.researchSources = researchSources;
     }
 
     public String getContentHeadline() {

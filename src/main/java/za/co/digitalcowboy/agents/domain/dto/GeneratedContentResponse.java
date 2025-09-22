@@ -43,7 +43,10 @@ public record GeneratedContentResponse(
         String topic,
 
         @JsonProperty("insights")
-        List<String> insights
+        List<String> insights,
+
+        @JsonProperty("sources")
+        List<String> sources
     ) {}
 
     public record ContentData(
@@ -83,7 +86,8 @@ public record GeneratedContentResponse(
     public static GeneratedContentResponse from(GeneratedContent entity) {
         ResearchData research = new ResearchData(
             entity.getTopic(),
-            entity.getResearchPoints()
+            entity.getResearchPoints(),
+            entity.getResearchSources()
         );
 
         ContentData content = new ContentData(

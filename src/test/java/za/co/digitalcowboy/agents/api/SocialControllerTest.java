@@ -72,7 +72,8 @@ class SocialControllerTest {
         // Create test content response
         GeneratedContentResponse.ResearchData research = new GeneratedContentResponse.ResearchData(
             "AI Topic",
-            Arrays.asList("Point 1", "Point 2")
+            Arrays.asList("Point 1", "Point 2"),
+            Arrays.asList("https://example.com/source1")
         );
 
         GeneratedContentResponse.ContentData content = new GeneratedContentResponse.ContentData(
