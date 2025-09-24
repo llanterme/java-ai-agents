@@ -1,0 +1,155 @@
+{
+  "family": "java-ai-agents",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "java-ai-agents",
+      "image": "YOUR_ECR_URI/java-ai-agents:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "production"
+        },
+        {
+          "name": "SERVER_PORT",
+          "value": "8080"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "value": "YOUR_OPENAI_API_KEY"
+        },
+        {
+          "name": "OPENAI_TEXT_MODEL",
+          "value": "gpt-4o"
+        },
+        {
+          "name": "OPENAI_IMAGE_MODEL",
+          "value": "dall-e-3"
+        },
+        {
+          "name": "OPENAI_TIMEOUT_MS",
+          "value": "30000"
+        },
+        {
+          "name": "OPENAI_IMAGE_TIMEOUT_MS",
+          "value": "120000"
+        },
+        {
+          "name": "SERPAPI_KEY",
+          "value": "YOUR_SERPAPI_KEY"
+        },
+        {
+          "name": "SERPAPI_ENGINE",
+          "value": "google"
+        },
+        {
+          "name": "SERPAPI_LOCATION",
+          "value": "United States"
+        },
+        {
+          "name": "SERPAPI_MAX_RESULTS",
+          "value": "5"
+        },
+        {
+          "name": "SERPAPI_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "YOUR_RDS_ENDPOINT"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "3306"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "java_ai_agents"
+        },
+        {
+          "name": "DB_USERNAME",
+          "value": "YOUR_DB_USERNAME"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "value": "YOUR_DB_PASSWORD"
+        },
+        {
+          "name": "JWT_SECRET",
+          "value": "YOUR_BASE64_ENCODED_JWT_SECRET"
+        },
+        {
+          "name": "JWT_ACCESS_TOKEN_EXPIRY_MINUTES",
+          "value": "30"
+        },
+        {
+          "name": "JWT_REFRESH_TOKEN_EXPIRY_DAYS",
+          "value": "7"
+        },
+        {
+          "name": "LINKEDIN_CLIENT_ID",
+          "value": "YOUR_LINKEDIN_CLIENT_ID"
+        },
+        {
+          "name": "LINKEDIN_CLIENT_SECRET",
+          "value": "YOUR_LINKEDIN_CLIENT_SECRET"
+        },
+        {
+          "name": "OAUTH_ENCRYPTION_KEY",
+          "value": "YOUR_32_BYTE_ENCRYPTION_KEY"
+        },
+        {
+          "name": "IMAGES_DOWNLOAD_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "IMAGES_STORAGE_PATH",
+          "value": "/app/generated-images"
+        },
+        {
+          "name": "IMAGES_KEEP_REMOTE_URL",
+          "value": "false"
+        },
+        {
+          "name": "IMAGES_BASE_URL",
+          "value": "https://your-api-domain.com"
+        },
+        {
+          "name": "OAUTH_REDIRECT_BASE_URL",
+          "value": "https://your-api-domain.com"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/java-ai-agents",
+          "awslogs-region": "YOUR_REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "mountPoints": [],
+      "volumesFrom": []
+    }
+  ],
+  "volumes": [],
+  "placementConstraints": []
+}

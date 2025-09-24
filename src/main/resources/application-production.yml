@@ -1,0 +1,151 @@
+spring:
+  application:
+    name: java-ai-agents
+  profiles:
+    active: production
+
+  # Database Configuration
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=true&requireSSL=true&serverTimezone=UTC
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Use validate in production, rely on Flyway for schema changes
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: false
+        use_sql_comments: false
+
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+
+  # Async Configuration
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 20
+        queue-capacity: 100
+      thread-name-prefix: AsyncGeneration-
+      shutdown:
+        await-termination: true
+        await-termination-period: 30s
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  error:
+    include-message: never
+    include-stacktrace: never
+  forward-headers-strategy: native  # Important for AWS ECS/ALB
+
+# OpenAI Configuration
+openai:
+  api-key: ${OPENAI_API_KEY}
+  text-model: ${OPENAI_TEXT_MODEL:gpt-4o}
+  image-model: ${OPENAI_IMAGE_MODEL:dall-e-3}
+  timeout-ms: ${OPENAI_TIMEOUT_MS:30000}
+  image-timeout-ms: ${OPENAI_IMAGE_TIMEOUT_MS:120000}
+  temperature: 0.1
+  max-tokens: 2000
+
+# SERP API Configuration (Web Search)
+serpapi:
+  api-key: ${SERPAPI_KEY:}
+  engine: ${SERPAPI_ENGINE:google}
+  location: ${SERPAPI_LOCATION:United States}
+  max-results: ${SERPAPI_MAX_RESULTS:5}
+  enabled: ${SERPAPI_ENABLED:true}
+  cache:
+    ttl-minutes: 60
+    max-size: 100
+
+# Image Management Configuration
+images:
+  download-enabled: ${IMAGES_DOWNLOAD_ENABLED:true}
+  local-storage-path: ${IMAGES_STORAGE_PATH:/app/generated-images}
+  keep-remote-url: ${IMAGES_KEEP_REMOTE_URL:false}
+  base-url: ${IMAGES_BASE_URL:https://api.example.com}
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiry-minutes: ${JWT_ACCESS_TOKEN_EXPIRY_MINUTES:30}
+  refresh-token-expiry-days: ${JWT_REFRESH_TOKEN_EXPIRY_DAYS:7}
+
+# OAuth Configuration
+oauth:
+  encryption:
+    key: ${OAUTH_ENCRYPTION_KEY}
+  linkedin:
+    client-id: ${LINKEDIN_CLIENT_ID:}
+    client-secret: ${LINKEDIN_CLIENT_SECRET:}
+    redirect-uri: ${OAUTH_REDIRECT_BASE_URL:https://api.example.com}/api/v1/connections/linkedin/callback
+    authorization-base-url: https://www.linkedin.com/oauth/v2/authorization
+    token-base-url: https://www.linkedin.com/oauth/v2/accessToken
+    user-info-url: https://api.linkedin.com/v2/userinfo
+    post-url: https://api.linkedin.com/v2/ugcPosts
+    scope: openid profile email w_member_social
+  redirect-base-url: ${OAUTH_REDIRECT_BASE_URL:https://api.example.com}
+
+# Actuator Configuration (Health & Metrics)
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: production
+
+# Logging Configuration
+logging:
+  level:
+    root: WARN
+    za.co.digitalcowboy.agents: INFO
+    org.springframework: WARN
+    org.springframework.web: INFO
+    org.springframework.security: WARN
+    dev.langchain4j: INFO
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/java-ai-agents/application.log
+    max-size: 10MB
+    max-history: 30
+
+# Security Configuration
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://app.example.com}
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+  max-age: 3600
