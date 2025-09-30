@@ -164,31 +164,64 @@ public class OAuthConnectionService {
     }
     
     public boolean refreshTokenIfNeeded(Long userId, String providerName) {
+        return refreshTokenIfNeeded(userId, providerName, 5); // Default to 5 days proactive refresh
+    }
+
+    /**
+     * Refreshes token if needed, with configurable proactive refresh window.
+     *
+     * @param userId The user ID
+     * @param providerName The OAuth provider name
+     * @param daysBeforeExpiry Number of days before expiry to trigger refresh (for proactive refresh)
+     * @return true if token is valid or successfully refreshed, false otherwise
+     */
+    public boolean refreshTokenIfNeeded(Long userId, String providerName, int daysBeforeExpiry) {
         OAuthProvider provider = OAuthProvider.fromValue(providerName);
         Optional<ConnectedAccount> accountOpt = connectedAccountRepository.findByUserIdAndProvider(userId, provider);
-        
+
         if (!accountOpt.isPresent()) {
+            logger.warn("No {} connection found for user {}", providerName, userId);
             return false;
         }
-        
+
         ConnectedAccount account = accountOpt.get();
-        if (!account.isExpired()) {
+
+        // Check if token needs refresh (expired or expires within N days)
+        boolean needsRefresh = false;
+        if (account.getTokenExpiresAt() == null) {
+            logger.warn("Token expiry date is null for user {} provider {}, assuming needs refresh", userId, providerName);
+            needsRefresh = true;
+        } else {
+            LocalDateTime refreshThreshold = LocalDateTime.now().plusDays(daysBeforeExpiry);
+            needsRefresh = account.getTokenExpiresAt().isBefore(refreshThreshold);
+
+            if (!needsRefresh) {
+                logger.debug("Token for user {} provider {} is still valid until {}",
+                    userId, providerName, account.getTokenExpiresAt());
+                return true;
+            }
+        }
+
+        if (!needsRefresh) {
             return true; // Token is still valid
         }
-        
+
+        logger.info("Token for user {} provider {} expires within {} days, attempting refresh",
+            userId, providerName, daysBeforeExpiry);
+
         if (account.getRefreshToken() == null) {
-            // Mark as expired and return false
+            logger.error("No refresh token available for user {} provider {}, marking as expired", userId, providerName);
             account.setStatus(ConnectionStatus.EXPIRED);
             connectedAccountRepository.save(account);
             return false;
         }
-        
+
         try {
             OAuthProviderService providerService = providerFactory.getProvider(provider);
             String decryptedRefreshToken = encryptionService.decrypt(account.getRefreshToken());
-            
+
             OAuthProviderService.TokenResponse tokenResponse = providerService.refreshToken(decryptedRefreshToken);
-            
+
             // Update account with new tokens
             account.setAccessToken(encryptionService.encrypt(tokenResponse.getAccessToken()));
             if (tokenResponse.getRefreshToken() != null) {
@@ -196,12 +229,13 @@ public class OAuthConnectionService {
             }
             account.setTokenExpiresAt(tokenResponse.getExpiresAt());
             account.setStatus(ConnectionStatus.ACTIVE);
-            
+
             connectedAccountRepository.save(account);
-            
-            logger.info("Successfully refreshed token for user {} provider {}", userId, providerName);
+
+            logger.info("Successfully refreshed token for user {} provider {}, new expiry: {}",
+                userId, providerName, tokenResponse.getExpiresAt());
             return true;
-            
+
         } catch (Exception e) {
             logger.error("Failed to refresh token for user {} provider {}", userId, providerName, e);
             account.setStatus(ConnectionStatus.EXPIRED);

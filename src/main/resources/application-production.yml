@@ -1,12 +1,10 @@
 spring:
   application:
     name: java-ai-agents
-  profiles:
-    active: production
 
   # Database Configuration
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=true&requireSSL=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME}?useSSL=true&requireSSL=true&serverTimezone=UTC
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -48,7 +46,7 @@ spring:
 
 # Server Configuration
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:9001}
   compression:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/xml,text/plain
@@ -95,6 +93,11 @@ jwt:
 oauth:
   encryption:
     key: ${OAUTH_ENCRYPTION_KEY}
+  token-refresh:
+    days-before-expiry: ${OAUTH_TOKEN_REFRESH_DAYS:7}  # Refresh tokens N days before expiry (7 days in production)
+    scheduled:
+      enabled: ${OAUTH_TOKEN_REFRESH_SCHEDULED_ENABLED:true}  # Enable/disable scheduled refresh
+      cron: ${OAUTH_TOKEN_REFRESH_CRON:0 0 2 * * *}  # Daily at 2 AM by default
   linkedin:
     client-id: ${LINKEDIN_CLIENT_ID:}
     client-secret: ${LINKEDIN_CLIENT_SECRET:}

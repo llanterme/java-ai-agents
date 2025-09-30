@@ -26,7 +26,9 @@ public interface ConnectedAccountRepository extends JpaRepository<ConnectedAccou
     
     @Query("SELECT ca FROM ConnectedAccount ca WHERE ca.tokenExpiresAt IS NOT NULL AND ca.tokenExpiresAt < :threshold")
     List<ConnectedAccount> findTokensExpiringBefore(@Param("threshold") LocalDateTime threshold);
-    
+
+    List<ConnectedAccount> findByStatusAndTokenExpiresAtBefore(ConnectionStatus status, LocalDateTime threshold);
+
     void deleteByUserIdAndProvider(Long userId, OAuthProvider provider);
     
     boolean existsByUserIdAndProvider(Long userId, OAuthProvider provider);

@@ -13,6 +13,8 @@ import za.co.digitalcowboy.agents.service.oauth.TokenEncryptionService;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class LinkedInPostingService {
@@ -36,14 +38,19 @@ public class LinkedInPostingService {
     
     public LinkedInPostResponse postToLinkedIn(Long userId, String text, String imagePath) {
         try {
-            // Get the user's LinkedIn connection
+            // Ensure token is valid and refresh if needed
+            if (!ensureValidToken(userId)) {
+                throw new IllegalStateException("Unable to refresh LinkedIn token for user " + userId);
+            }
+
+            // Get the user's LinkedIn connection (now with fresh token if it was refreshed)
             ConnectedAccount connection = oauthConnectionService.getActiveConnection(userId, "linkedin")
                 .orElseThrow(() -> new IllegalStateException("No active LinkedIn connection found for user " + userId));
-            
+
             // Get user info to create author URN
             OAuthProviderService.UserInfo userInfo = oauthConnectionService.getUserInfo(userId, "linkedin");
             String authorUrn = "urn:li:person:" + userInfo.getId();
-            
+
             // Decrypt the access token before using it for LinkedIn API calls
             String decryptedAccessToken = encryptionService.decrypt(connection.getAccessToken());
             
@@ -276,29 +283,74 @@ public class LinkedInPostingService {
 
     public boolean validateConnection(Long userId) {
         try {
+            // First ensure the token is valid (this will refresh if needed)
+            if (!ensureValidToken(userId)) {
+                logger.warn("LinkedIn token is expired or cannot be refreshed for user {}", userId);
+                return false;
+            }
+
+            // Get the user's LinkedIn connection (now with fresh token if it was refreshed)
             ConnectedAccount connection = oauthConnectionService.getActiveConnection(userId, "linkedin")
                 .orElse(null);
-            
+
             if (connection == null) {
                 logger.warn("No LinkedIn connection found for user {}", userId);
                 return false;
             }
-            
-            if (connection.isExpired()) {
-                logger.warn("LinkedIn connection expired for user {}", userId);
-                return false;
-            }
-            
+
             // Check if the connection has posting permissions
             if (!connection.getScopesList().contains("w_member_social")) {
                 logger.warn("LinkedIn connection for user {} lacks posting permissions (w_member_social scope)", userId);
                 return false;
             }
-            
+
             return true;
             
         } catch (Exception e) {
             logger.error("Failed to validate LinkedIn connection for user {}: {}", userId, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Ensures the LinkedIn token is valid and refreshes it if needed.
+     * Proactively refreshes tokens that expire within 5 days.
+     *
+     * @param userId The user ID to check/refresh token for
+     * @return true if token is valid or successfully refreshed, false otherwise
+     */
+    private boolean ensureValidToken(Long userId) {
+        try {
+            // Get the current connection
+            Optional<ConnectedAccount> connectionOpt = oauthConnectionService.getActiveConnection(userId, "linkedin");
+            if (connectionOpt.isEmpty()) {
+                logger.warn("No LinkedIn connection found for user {}", userId);
+                return false;
+            }
+
+            ConnectedAccount connection = connectionOpt.get();
+
+            // Check if token expires within 5 days (proactive refresh)
+            LocalDateTime fiveDaysFromNow = LocalDateTime.now().plusDays(5);
+            boolean needsRefresh = connection.getTokenExpiresAt() != null &&
+                                   connection.getTokenExpiresAt().isBefore(fiveDaysFromNow);
+
+            if (needsRefresh) {
+                logger.info("LinkedIn token for user {} expires within 5 days, refreshing proactively", userId);
+                boolean refreshed = oauthConnectionService.refreshTokenIfNeeded(userId, "linkedin");
+                if (!refreshed) {
+                    logger.error("Failed to refresh LinkedIn token for user {}", userId);
+                    return false;
+                }
+                logger.info("Successfully refreshed LinkedIn token for user {}", userId);
+            } else {
+                logger.debug("LinkedIn token for user {} is still valid", userId);
+            }
+
+            return true;
+
+        } catch (Exception e) {
+            logger.error("Failed to ensure valid LinkedIn token for user {}: {}", userId, e.getMessage(), e);
             return false;
         }
     }

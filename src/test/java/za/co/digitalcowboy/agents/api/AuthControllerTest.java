@@ -14,9 +14,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import java.util.Optional;
 
@@ -51,6 +54,7 @@ class AuthControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders
             .webAppContextSetup(context)
+            .apply(springSecurity())
             .build();
     }
     
@@ -175,16 +179,14 @@ class AuthControllerTest {
     }
     
     @Test
+    @WithMockUser(username = "test@example.com")
     void me_ShouldReturnUserResponse_WhenAuthenticated() throws Exception {
         User user = new User("test@example.com", "John", "Doe", "hashedPassword");
         user.setId(1L);
-        
-        String accessToken = jwtService.generateAccessToken(user);
-        
+
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        
-        mockMvc.perform(get("/api/v1/auth/me")
-                .header("Authorization", "Bearer " + accessToken))
+
+        mockMvc.perform(get("/api/v1/auth/me"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(1))
@@ -203,7 +205,9 @@ class AuthControllerTest {
     
     @Test
     void protectedEndpoint_ShouldReturnUnauthorized_WhenNoToken() throws Exception {
-        mockMvc.perform(get("/api/v1/generate"))
+        mockMvc.perform(post("/api/v1/generate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"topic\":\"test\",\"platform\":\"twitter\",\"tone\":\"casual\"}"))
             .andExpect(status().isUnauthorized());
     }
 }

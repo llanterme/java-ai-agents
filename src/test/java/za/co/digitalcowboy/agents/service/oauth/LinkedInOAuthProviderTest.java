@@ -36,14 +36,13 @@ class LinkedInOAuthProviderTest {
     void getRequiredScopes_ShouldReturnExpectedScopes() {
         // When
         List<String> scopes = linkedInProvider.getRequiredScopes();
-        
+
         // Then
         assertThat(scopes).containsExactlyInAnyOrder(
-                "r_liteprofile",
-                "r_emailaddress", 
-                "w_member_social",
-                "w_organization_social",
-                "r_organization_social"
+                "openid",
+                "profile",
+                "email",
+                "w_member_social"
         );
     }
     

@@ -28,7 +28,7 @@ spring:
       spec: maximumSize=10000,expireAfterWrite=10m
 
 server:
-  port: 8080
+  port: 9001
 
 openai:
   api-key: ${OPENAI_API_KEY:}
@@ -71,6 +71,11 @@ oauth:
   frontend-success-url: ${OAUTH_FRONTEND_URL:http://localhost:3000}/settings/connections
   encryption:
     key: ${OAUTH_ENCRYPTION_KEY:}  # Base64 encoded 256-bit key
+  token-refresh:
+    days-before-expiry: ${OAUTH_TOKEN_REFRESH_DAYS:5}  # Refresh tokens N days before expiry
+    scheduled:
+      enabled: ${OAUTH_TOKEN_REFRESH_SCHEDULED_ENABLED:true}  # Enable/disable scheduled refresh
+      cron: ${OAUTH_TOKEN_REFRESH_CRON:0 0 2 * * *}  # Daily at 2 AM by default
   providers:
     linkedin:
       client-id: ${LINKEDIN_CLIENT_ID:}
